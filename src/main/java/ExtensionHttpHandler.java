@@ -1,6 +1,4 @@
 import burp.api.montoya.http.handler.*;
-import burp.api.montoya.http.message.requests.HttpRequest;
-
 public class ExtensionHttpHandler implements HttpHandler {
     public ExtensionHttpHandler() {}
     @Override
