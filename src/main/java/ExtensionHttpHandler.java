@@ -6,9 +6,8 @@ public class ExtensionHttpHandler implements HttpHandler {
     @Override
     public RequestToBeSentAction handleHttpRequestToBeSent(HttpRequestToBeSent httpRequestToBeSent) {
         if (httpRequestToBeSent.isInScope()) {
-            HttpRequest request = httpRequestToBeSent;
             // Modify request
-            return RequestToBeSentAction.continueWith(request);
+            return RequestToBeSentAction.continueWith(httpRequestToBeSent);
         }
         return null;
     }
