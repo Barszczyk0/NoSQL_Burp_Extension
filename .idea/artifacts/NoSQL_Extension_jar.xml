@@ -1,0 +1,9 @@
+<component name="ArtifactManager">
+  <artifact type="jar" build-on-make="true" name="NoSQL_Extension:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/NoSQL_Extension_jar</output-path>
+    <root id="archive" name="NoSQL_Extension.jar">
+      <element id="module-output" name="NoSQL_Extension" />
+      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/net/portswigger/burp/extensions/montoya-api/2023.12.1/montoya-api-2023.12.1.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>
