@@ -1,13 +1,9 @@
 import burp.api.montoya.BurpExtension;
 import burp.api.montoya.MontoyaApi;
-import burp.api.montoya.http.handler.HttpHandler;
-import burp.api.montoya.ui.menu.BasicMenuItem;
-import burp.api.montoya.ui.menu.Menu;
-import burp.api.montoya.ui.menu.MenuItem;
 
 import java.util.ArrayList;
 
-public class BurpExtention implements BurpExtension {
+public class NNN implements BurpExtension {
     private ArrayList<Payload> payloadsArrayList = new ArrayList<>();
 
     private void LoadPayloads() {
