@@ -1,23 +1,25 @@
 import burp.api.montoya.http.handler.*;
-import burp.api.montoya.http.message.requests.HttpRequest;
 
-public class MyHttpHandler implements HttpHandler {
-    public MyHttpHandler() {}
-    @Override
-    public RequestToBeSentAction handleHttpRequestToBeSent(HttpRequestToBeSent httpRequestToBeSent) {
-//        if (httpRequestToBeSent.isInScope()) {
-//        }
-//        return null;
-        // Modify request
-        HttpRequest request = httpRequestToBeSent.withAddedHeader("Test", "TestValue");
-        return RequestToBeSentAction.continueWith(request);
+public class MyHttpHandler implements HttpHandler
+{
+    private final MyTableModel tableModel;
 
+    public MyHttpHandler(MyTableModel tableModel)
+    {
 
-
+        this.tableModel = tableModel;
     }
 
     @Override
-    public ResponseReceivedAction handleHttpResponseReceived(HttpResponseReceived httpResponseReceived) {
-        return null;
+    public RequestToBeSentAction handleHttpRequestToBeSent(HttpRequestToBeSent requestToBeSent)
+    {
+        return RequestToBeSentAction.continueWith(requestToBeSent);
+    }
+
+    @Override
+    public ResponseReceivedAction handleHttpResponseReceived(HttpResponseReceived responseReceived)
+    {
+        tableModel.add(responseReceived);
+        return ResponseReceivedAction.continueWith(responseReceived);
     }
 }
