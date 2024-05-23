@@ -1,32 +1,32 @@
 import java.util.ArrayList;
 
 public class Payload {
-    public String payload_GET;
-    public String payload_POST;
+    public String payloadUrlEncoded;
+    public String payload;
     public PayloadType payloadType;
     public ArrayList<String> errorMessage;
 
-    public Payload(PayloadType payloadType, String payload_GET, String payload_POST, ArrayList<String> errorMessage) {
+    public Payload(PayloadType payloadType, String payloadUrlEncoded, String payload, ArrayList<String> errorMessage) {
         this.payloadType = payloadType;
-        this.payload_GET = payload_GET;
-        this.payload_POST = payload_POST;
+        this.payloadUrlEncoded = payloadUrlEncoded;
+        this.payload = payload;
         this.errorMessage = errorMessage;
     }
 
-    public String getPayload_GET() {
-        return payload_GET;
+    public String getPayloadUrlEncoded() {
+        return payloadUrlEncoded;
     }
 
-    public void setPayload_GET(String payload_GET) {
-        this.payload_GET = payload_GET;
+    public void setPayloadUrlEncoded(String payloadUrlEncoded) {
+        this.payloadUrlEncoded = payloadUrlEncoded;
     }
 
-    public String getPayload_POST() {
-        return payload_POST;
+    public String getPayload() {
+        return payload;
     }
 
-    public void setPayload_POST(String payload_POST) {
-        this.payload_POST = payload_POST;
+    public void setPayload(String payload) {
+        this.payload = payload;
     }
 
     public PayloadType getPayloadType() {

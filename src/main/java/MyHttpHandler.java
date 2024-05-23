@@ -6,7 +6,6 @@ public class MyHttpHandler implements HttpHandler
 
     public MyHttpHandler(MyTableModel tableModel)
     {
-
         this.tableModel = tableModel;
     }
 
