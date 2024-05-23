@@ -1,22 +1,22 @@
 import burp.api.montoya.BurpExtension;
 import burp.api.montoya.MontoyaApi;
-import burp.api.montoya.http.handler.HttpHandler;
 import burp.api.montoya.http.handler.HttpResponseReceived;
-import burp.api.montoya.http.message.requests.HttpRequest;
+import burp.api.montoya.http.message.HttpRequestResponse;
+import burp.api.montoya.http.message.responses.HttpResponse;
 import burp.api.montoya.ui.UserInterface;
 import burp.api.montoya.ui.editor.HttpRequestEditor;
 import burp.api.montoya.ui.editor.HttpResponseEditor;
 
 import javax.swing.*;
 import java.awt.*;
-
 import java.util.ArrayList;
 
 import static burp.api.montoya.ui.editor.EditorOptions.READ_ONLY;
 
 public class NNN implements BurpExtension {
-    private MontoyaApi api;
+    private static MontoyaApi api;
     private ArrayList<Payload> payloadsArrayList = new ArrayList<>();
+    static HttpResponse response;
 
     private void LoadPayloads() {
         // Fuzz String
@@ -68,8 +68,6 @@ public class NNN implements BurpExtension {
 
 //        api.userInterface().registerHttpRequestEditorProvider(new MyHttpRequestEditorProvider(api));
 
-        api.intruder().registerPayloadGeneratorProvider(new MyPayloadGeneratorProvider());
-        api.intruder().registerPayloadProcessor(new MyPayloadProcessor(api));
 
 //        HttpHandler httpHandler = new MyHttpHandler();
 //        api.http().registerHttpHandler(httpHandler);
@@ -122,6 +120,26 @@ public class NNN implements BurpExtension {
         splitPane.setLeftComponent(scrollPane);
 
         return splitPane;
+    }
+
+     static void test(HttpRequestResponse requestResponse, String selectedText) {
+        api.logging().logToOutput("Selected request" + requestResponse.request().toString() + "\n");
+        new Thread(() -> {
+
+            try {
+
+                HttpRequestResponse response2receive = api.http().sendRequest(requestResponse.request());
+
+                api.logging().logToOutput("Response " + response2receive.response().toString() + "\n");
+
+            } catch (Exception e) {
+
+                api.logging().logToOutput("Request failed");
+
+            }
+
+        }).start();
+
     }
 
 

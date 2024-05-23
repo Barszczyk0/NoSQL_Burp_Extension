@@ -55,7 +55,7 @@ public class MyContextMenuItemsProvider implements ContextMenuItemsProvider
             //            selection_FUZZ_STRING.addActionListener(l -> api.logging().logToOutput("Request is:\r\n" + requestResponse.request().toString()));
 
 
-            selection_FUZZ_STRING.addActionListener(l -> test(requestResponse.request(), selectedText));
+            selection_FUZZ_STRING.addActionListener(l -> NNN.test(requestResponse, selectedText));
             selection_BOOLEAN.addActionListener(l -> api.logging().logToOutput("Selected text is (from boolean):\r\n" + startIndexSelected + endtIndexSelected));
             selection_AUTHENTICATION_BYPASS.addActionListener(l -> api.logging().logToOutput("Selected text is (from authentication bypass):\r\n" + startIndexSelected + endtIndexSelected));
             selection_DATA_EXTRACTION.addActionListener(l -> api.logging().logToOutput("Selected text is (from data extraction):\r\n" + startIndexSelected + endtIndexSelected));
@@ -72,11 +72,6 @@ public class MyContextMenuItemsProvider implements ContextMenuItemsProvider
 
         return null;
     }
-
-    private void test(HttpRequest request, String selectedText) {
-        api.logging().logToOutput("Selected request" + request.toString() + "\n");
-    }
-
 
 
 }
