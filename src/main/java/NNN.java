@@ -1,6 +1,8 @@
 import burp.api.montoya.BurpExtension;
 import burp.api.montoya.MontoyaApi;
+import burp.api.montoya.http.handler.HttpHandler;
 import burp.api.montoya.http.handler.HttpResponseReceived;
+import burp.api.montoya.http.message.requests.HttpRequest;
 import burp.api.montoya.ui.UserInterface;
 import burp.api.montoya.ui.editor.HttpRequestEditor;
 import burp.api.montoya.ui.editor.HttpResponseEditor;
@@ -64,6 +66,11 @@ public class NNN implements BurpExtension {
         api.userInterface().registerSuiteTab("NNN Logger", constructLoggerTab(tableModel));
         api.http().registerHttpHandler(new MyHttpHandler(tableModel));
 
+//        api.userInterface().registerHttpRequestEditorProvider(new MyHttpRequestEditorProvider(api));
+
+        api.intruder().registerPayloadGeneratorProvider(new MyPayloadGeneratorProvider());
+        api.intruder().registerPayloadProcessor(new MyPayloadProcessor(api));
+
 //        HttpHandler httpHandler = new MyHttpHandler();
 //        api.http().registerHttpHandler(httpHandler);
     }
@@ -116,6 +123,7 @@ public class NNN implements BurpExtension {
 
         return splitPane;
     }
+
 
 
 }

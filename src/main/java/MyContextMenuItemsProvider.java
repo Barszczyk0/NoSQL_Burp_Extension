@@ -1,6 +1,8 @@
 import burp.api.montoya.MontoyaApi;
 import burp.api.montoya.core.ToolType;
+import burp.api.montoya.http.handler.HttpRequestToBeSent;
 import burp.api.montoya.http.message.HttpRequestResponse;
+import burp.api.montoya.http.message.requests.HttpRequest;
 import burp.api.montoya.ui.contextmenu.ContextMenuEvent;
 import burp.api.montoya.ui.contextmenu.ContextMenuItemsProvider;
 import burp.api.montoya.ui.contextmenu.MessageEditorHttpRequestResponse;
@@ -9,6 +11,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.net.http.HttpResponse;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -17,6 +20,7 @@ public class MyContextMenuItemsProvider implements ContextMenuItemsProvider
 {
 
     private final MontoyaApi api;
+    private MyHttpHandler myHttpHandler;
 
     public MyContextMenuItemsProvider(MontoyaApi api)
     {
@@ -37,19 +41,25 @@ public class MyContextMenuItemsProvider implements ContextMenuItemsProvider
             JMenuItem selection_DATA_EXTRACTION = new JMenuItem("Use payload type: DATA_EXTRACTION");
             JMenuItem selection_TIME_BASED = new JMenuItem("Use payload type: TIME_BASED");
 
-            String retrieveSelectedTextOffset = event.messageEditorRequestResponse().isPresent() ?
-                    event.messageEditorRequestResponse().get().selectionContext().toString() :
+            String startIndexSelected = event.messageEditorRequestResponse().isPresent() ?
+                    String.valueOf(event.messageEditorRequestResponse().get().selectionOffsets().get().startIndexInclusive()) :
+                    "";
+
+            String endtIndexSelected = event.messageEditorRequestResponse().isPresent() ?
+                    String.valueOf(event.messageEditorRequestResponse().get().selectionOffsets().get().endIndexExclusive()) :
                     "";
 
             HttpRequestResponse requestResponse = event.messageEditorRequestResponse().isPresent() ? event.messageEditorRequestResponse().get().requestResponse() : event.selectedRequestResponses().get(0);
-//            selection_FUZZ_STRING.addActionListener(l -> api.logging().logToOutput("Request is:\r\n" + requestResponse.request().toString()));
+            String selectedText = requestResponse.request().toString().substring(Integer.parseInt(startIndexSelected), Integer.parseInt(endtIndexSelected));
+
+            //            selection_FUZZ_STRING.addActionListener(l -> api.logging().logToOutput("Request is:\r\n" + requestResponse.request().toString()));
 
 
-            selection_FUZZ_STRING.addActionListener(l -> api.logging().logToOutput("Selected text is (from boolean):\r\n" + retrieveSelectedTextOffset));
-            selection_BOOLEAN.addActionListener(l -> api.logging().logToOutput("Selected text is (from boolean):\r\n" + retrieveSelectedTextOffset));
-            selection_AUTHENTICATION_BYPASS.addActionListener(l -> api.logging().logToOutput("Selected text is (from authentication bypass):\r\n" + retrieveSelectedTextOffset));
-            selection_DATA_EXTRACTION.addActionListener(l -> api.logging().logToOutput("Selected text is (from data extraction):\r\n" + retrieveSelectedTextOffset));
-            selection_TIME_BASED.addActionListener(l -> api.logging().logToOutput("Selected text is (from time based):\r\n" + retrieveSelectedTextOffset));
+            selection_FUZZ_STRING.addActionListener(l -> test(requestResponse.request(), selectedText));
+            selection_BOOLEAN.addActionListener(l -> api.logging().logToOutput("Selected text is (from boolean):\r\n" + startIndexSelected + endtIndexSelected));
+            selection_AUTHENTICATION_BYPASS.addActionListener(l -> api.logging().logToOutput("Selected text is (from authentication bypass):\r\n" + startIndexSelected + endtIndexSelected));
+            selection_DATA_EXTRACTION.addActionListener(l -> api.logging().logToOutput("Selected text is (from data extraction):\r\n" + startIndexSelected + endtIndexSelected));
+            selection_TIME_BASED.addActionListener(l -> api.logging().logToOutput("Selected text is (from time based):\r\n" + startIndexSelected + endtIndexSelected));
 
             menuItemList.add(selection_FUZZ_STRING);
             menuItemList.add(selection_BOOLEAN);
@@ -62,5 +72,11 @@ public class MyContextMenuItemsProvider implements ContextMenuItemsProvider
 
         return null;
     }
+
+    private void test(HttpRequest request, String selectedText) {
+        api.logging().logToOutput("Selected request" + request.toString() + "\n");
+    }
+
+
 
 }
