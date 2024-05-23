@@ -45,21 +45,21 @@ public class MyContextMenuItemsProvider implements ContextMenuItemsProvider
                     String.valueOf(event.messageEditorRequestResponse().get().selectionOffsets().get().startIndexInclusive()) :
                     "";
 
-            String endtIndexSelected = event.messageEditorRequestResponse().isPresent() ?
+            String endIndexSelected = event.messageEditorRequestResponse().isPresent() ?
                     String.valueOf(event.messageEditorRequestResponse().get().selectionOffsets().get().endIndexExclusive()) :
                     "";
 
             HttpRequestResponse requestResponse = event.messageEditorRequestResponse().isPresent() ? event.messageEditorRequestResponse().get().requestResponse() : event.selectedRequestResponses().get(0);
-            String selectedText = requestResponse.request().toString().substring(Integer.parseInt(startIndexSelected), Integer.parseInt(endtIndexSelected));
+            String selectedText = requestResponse.request().toString().substring(Integer.parseInt(startIndexSelected), Integer.parseInt(endIndexSelected));
 
             //            selection_FUZZ_STRING.addActionListener(l -> api.logging().logToOutput("Request is:\r\n" + requestResponse.request().toString()));
 
 
-            selection_FUZZ_STRING.addActionListener(l -> NNN.test(requestResponse, selectedText));
-            selection_BOOLEAN.addActionListener(l -> api.logging().logToOutput("Selected text is (from boolean):\r\n" + startIndexSelected + endtIndexSelected));
-            selection_AUTHENTICATION_BYPASS.addActionListener(l -> api.logging().logToOutput("Selected text is (from authentication bypass):\r\n" + startIndexSelected + endtIndexSelected));
-            selection_DATA_EXTRACTION.addActionListener(l -> api.logging().logToOutput("Selected text is (from data extraction):\r\n" + startIndexSelected + endtIndexSelected));
-            selection_TIME_BASED.addActionListener(l -> api.logging().logToOutput("Selected text is (from time based):\r\n" + startIndexSelected + endtIndexSelected));
+            selection_FUZZ_STRING.addActionListener(l -> NNN.test(requestResponse, Integer.parseInt(startIndexSelected), Integer.parseInt(endIndexSelected)));
+            selection_BOOLEAN.addActionListener(l -> api.logging().logToOutput("Selected text is (from boolean):\r\n" + startIndexSelected + endIndexSelected));
+            selection_AUTHENTICATION_BYPASS.addActionListener(l -> api.logging().logToOutput("Selected text is (from authentication bypass):\r\n" + startIndexSelected + endIndexSelected));
+            selection_DATA_EXTRACTION.addActionListener(l -> api.logging().logToOutput("Selected text is (from data extraction):\r\n" + startIndexSelected + endIndexSelected));
+            selection_TIME_BASED.addActionListener(l -> api.logging().logToOutput("Selected text is (from time based):\r\n" + startIndexSelected + endIndexSelected));
 
             menuItemList.add(selection_FUZZ_STRING);
             menuItemList.add(selection_BOOLEAN);

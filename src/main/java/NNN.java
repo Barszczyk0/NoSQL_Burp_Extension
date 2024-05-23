@@ -1,7 +1,10 @@
 import burp.api.montoya.BurpExtension;
 import burp.api.montoya.MontoyaApi;
+import burp.api.montoya.http.HttpService;
 import burp.api.montoya.http.handler.HttpResponseReceived;
+import burp.api.montoya.http.message.HttpHeader;
 import burp.api.montoya.http.message.HttpRequestResponse;
+import burp.api.montoya.http.message.requests.HttpRequest;
 import burp.api.montoya.http.message.responses.HttpResponse;
 import burp.api.montoya.ui.UserInterface;
 import burp.api.montoya.ui.editor.HttpRequestEditor;
@@ -10,12 +13,13 @@ import burp.api.montoya.ui.editor.HttpResponseEditor;
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.List;
 
 import static burp.api.montoya.ui.editor.EditorOptions.READ_ONLY;
 
 public class NNN implements BurpExtension {
     private static MontoyaApi api;
-    private ArrayList<Payload> payloadsArrayList = new ArrayList<>();
+    private static ArrayList<Payload> payloadsArrayList = new ArrayList<>();
     static HttpResponse response;
 
     private void LoadPayloads() {
@@ -122,16 +126,18 @@ public class NNN implements BurpExtension {
         return splitPane;
     }
 
-     static void test(HttpRequestResponse requestResponse, String selectedText) {
+     static void test(HttpRequestResponse requestResponse, Integer startIndex, Integer endIndex) {
         api.logging().logToOutput("Selected request" + requestResponse.request().toString() + "\n");
         new Thread(() -> {
 
             try {
-
-                HttpRequestResponse response2receive = api.http().sendRequest(requestResponse.request());
-
-                api.logging().logToOutput("Response " + response2receive.response().toString() + "\n");
-
+                HttpService httpService = requestResponse.request().httpService();
+                for (Payload payload : payloadsArrayList){
+                    HttpRequest request2send = HttpRequest.httpRequest(httpService, requestResponse.request().toString().substring(0, startIndex) + payload.payloadUrlEncoded + requestResponse.request().toString().substring(endIndex));
+                    api.logging().logToOutput("Selected request" + request2send.toString() + "\n");
+                    HttpRequestResponse response2receive = api.http().sendRequest(request2send);
+                    api.logging().logToOutput("Response " + response2receive.response().toString() + "\n");
+                }
             } catch (Exception e) {
 
                 api.logging().logToOutput("Request failed");
