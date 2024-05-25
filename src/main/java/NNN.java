@@ -94,10 +94,29 @@ public class NNN implements BurpExtension {
         HttpResponseEditor responseViewer = userInterface.createHttpResponseEditor(READ_ONLY);
 
         // new information pane
-        this.infoPane.setEditable(false);
-        this.infoPane.setText("NNN is waititng to start a test");
+        this.infoPane.setEditable(false); // Make it read-only
+        this.infoPane.setText("NNN is waiting to start a test\nPlease select a payload type"); // Set initial text to "Hello World"
         JScrollPane infoScrollPane = new JScrollPane(this.infoPane);
-        tabs.addTab("NNN Scan Information", infoScrollPane);
+
+        // Create a button to clear logged packets
+        JButton clearButton = new JButton("Clear Log");
+        clearButton.setForeground(Color.decode("#FF6633"));
+        clearButton.setPreferredSize(new Dimension(200, clearButton.getPreferredSize().height));
+        clearButton.addActionListener(e -> {
+            tableModel.clear();
+            this.infoPane.setText("Log cleared");
+        });
+
+        // Panel to hold the button
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        buttonPanel.add(clearButton);
+
+        // Panel to hold the info pane and the button
+        JPanel infoPanel = new JPanel(new BorderLayout());
+        infoPanel.add(infoScrollPane, BorderLayout.CENTER);
+        infoPanel.add(buttonPanel, BorderLayout.SOUTH);
+
+        tabs.addTab("NNN Scan Information", infoPanel);
 
         tabs.addTab("Request", requestViewer.uiComponent());
         tabs.addTab("Response", responseViewer.uiComponent());

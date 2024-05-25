@@ -69,4 +69,12 @@ public class MyTableModel extends AbstractTableModel
     {
         return log.get(rowIndex);
     }
+
+    public void clear() {
+        int rowCount = getRowCount();
+        if (rowCount > 0) {
+            log.clear();
+            fireTableRowsDeleted(0, rowCount - 1);
+        }
+    }
 }
