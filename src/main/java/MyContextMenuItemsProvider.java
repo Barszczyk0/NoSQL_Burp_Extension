@@ -24,7 +24,7 @@ public class MyContextMenuItemsProvider implements ContextMenuItemsProvider
     @Override
     public List<Component> provideMenuItems(ContextMenuEvent event)
     {
-        if (event.isFromTool(ToolType.PROXY, ToolType.TARGET, ToolType.LOGGER))
+        if (event.isFromTool(ToolType.PROXY, ToolType.REPEATER, ToolType.LOGGER))
         {
             List<Component> menuItemList = new ArrayList<>();
             event.messageEditorRequestResponse().get().selectionContext();
@@ -48,8 +48,6 @@ public class MyContextMenuItemsProvider implements ContextMenuItemsProvider
 
             HttpRequestResponse requestResponse = event.messageEditorRequestResponse().isPresent() ? event.messageEditorRequestResponse().get().requestResponse() : event.selectedRequestResponses().get(0);
             String selectedText = requestResponse.request().toString().substring(Integer.parseInt(startIndexSelected), Integer.parseInt(endIndexSelected));
-
-            //            selection_FUZZ_STRING.addActionListener(l -> api.logging().logToOutput("Request is:\r\n" + requestResponse.request().toString()));
 
 
             selection_FUZZ_STRING.addActionListener(l -> NNN.fuzzstringTest(requestResponse, Integer.parseInt(startIndexSelected), Integer.parseInt(endIndexSelected)));
@@ -83,9 +81,6 @@ public class MyContextMenuItemsProvider implements ContextMenuItemsProvider
 
             return menuItemList;
         }
-
         return null;
     }
-
-
 }
