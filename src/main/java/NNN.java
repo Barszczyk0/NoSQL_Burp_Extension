@@ -10,9 +10,11 @@ import burp.api.montoya.ui.editor.HttpRequestEditor;
 import burp.api.montoya.ui.editor.HttpResponseEditor;
 
 import javax.swing.*;
+import javax.swing.table.TableModel;
+import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.util.ArrayList;
-import java.util.stream.Collectors;
+import java.util.Comparator;
 
 import static burp.api.montoya.ui.editor.EditorOptions.READ_ONLY;
 
@@ -20,6 +22,8 @@ public class NNN implements BurpExtension {
     private static MontoyaApi api;
     private static ArrayList<Payload> payloadsArrayList = new ArrayList<>();
     static HttpResponse response;
+
+    private JTextPane infoPane = new JTextPane();
 
     private void LoadPayloads() {
         // Fuzz String
@@ -89,6 +93,12 @@ public class NNN implements BurpExtension {
         HttpRequestEditor requestViewer = userInterface.createHttpRequestEditor(READ_ONLY);
         HttpResponseEditor responseViewer = userInterface.createHttpResponseEditor(READ_ONLY);
 
+        // new information pane
+        this.infoPane.setEditable(false);
+        this.infoPane.setText("NNN is waititng to start a test");
+        JScrollPane infoScrollPane = new JScrollPane(this.infoPane);
+        tabs.addTab("NNN Scan Information", infoScrollPane);
+
         tabs.addTab("Request", requestViewer.uiComponent());
         tabs.addTab("Response", responseViewer.uiComponent());
 
@@ -115,8 +125,37 @@ public class NNN implements BurpExtension {
         table.getColumnModel().getColumn(4).setMaxWidth(90);
         table.getColumnModel().getColumn(5).setMaxWidth(90);
 
-        table.setAutoCreateRowSorter(true);
+        // Create a custom TableRowSorter
+        TableRowSorter<TableModel> sorter = new TableRowSorter<>(tableModel);
 
+        // Set custom comparators for numeric sorting on the first and last columns
+        sorter.setComparator(0, new Comparator<Object>() {
+            @Override
+            public int compare(Object o1, Object o2) {
+                try {
+                    int num1 = Integer.parseInt(o1.toString());
+                    int num2 = Integer.parseInt(o2.toString());
+                    return Integer.compare(num1, num2);
+                } catch (NumberFormatException e) {
+                    return o1.toString().compareTo(o2.toString());
+                }
+            }
+        });
+
+        sorter.setComparator(tableModel.getColumnCount() - 1, new Comparator<Object>() {
+            @Override
+            public int compare(Object o1, Object o2) {
+                try {
+                    int num1 = Integer.parseInt(o1.toString());
+                    int num2 = Integer.parseInt(o2.toString());
+                    return Integer.compare(num1, num2);
+                } catch (NumberFormatException e) {
+                    return o1.toString().compareTo(o2.toString());
+                }
+            }
+        });
+
+        table.setRowSorter(sorter);
 
         JScrollPane scrollPane = new JScrollPane(table);
 
@@ -125,7 +164,8 @@ public class NNN implements BurpExtension {
         return splitPane;
     }
 
-     static void fuzzstringTest(HttpRequestResponse requestResponse, Integer startIndex, Integer endIndex) {
+
+    static void fuzzstringTest(HttpRequestResponse requestResponse, Integer startIndex, Integer endIndex) {
         api.logging().logToOutput("[i] Selected request:\n" + requestResponse.request().toString() + "\n");
         new Thread(() -> {
             try {
@@ -220,4 +260,6 @@ public class NNN implements BurpExtension {
             }
         }).start();
     }
+
+
 }
