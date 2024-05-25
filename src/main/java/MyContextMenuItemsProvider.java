@@ -24,7 +24,7 @@ public class MyContextMenuItemsProvider implements ContextMenuItemsProvider
     @Override
     public List<Component> provideMenuItems(ContextMenuEvent event)
     {
-        if (event.isFromTool(ToolType.PROXY, ToolType.REPEATER, ToolType.LOGGER, ToolType.EXTENSIONS))
+        if (event.isFromTool(ToolType.PROXY, ToolType.REPEATER, ToolType.LOGGER, ToolType.EXTENSIONS, ToolType.TARGET))
         {
             List<Component> menuItemList = new ArrayList<>();
             event.messageEditorRequestResponse().get().selectionContext();
