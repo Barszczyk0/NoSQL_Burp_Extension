@@ -10,6 +10,7 @@ import burp.api.montoya.ui.editor.HttpRequestEditor;
 import burp.api.montoya.ui.editor.HttpResponseEditor;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
@@ -23,11 +24,11 @@ public class NNN implements BurpExtension {
     private static ArrayList<Payload> payloadsArrayList = new ArrayList<>();
     static HttpResponse response;
 
-    private JTextPane infoPane = new JTextPane();
+    private static JTextPane infoPane = new JTextPane();
 
     private void LoadPayloads() {
         // Fuzz String
-        this.payloadsArrayList.add(new Payload(PayloadType.FUZZ_STRING, "'\"`{;$Foo}$Foo \\xYZ", null, null));
+        this.payloadsArrayList.add(new Payload(PayloadType.FUZZ_STRING, "'\"`{;$Foo}$Foo \\xYZ", "'\"`{;$Foo}$Foo \\xYZ", null));
 
         // Boolean payloads
         this.payloadsArrayList.add(new Payload(PayloadType.BOOLEAN, urlEncodeData("' && 0 && 'x"), "' && 0 && 'x", null));
@@ -74,11 +75,6 @@ public class NNN implements BurpExtension {
         api.userInterface().registerSuiteTab("NNN Logger", constructLoggerTab(tableModel));
         api.http().registerHttpHandler(new MyHttpHandler(tableModel));
 
-//        api.userInterface().registerHttpRequestEditorProvider(new MyHttpRequestEditorProvider(api));
-
-
-//        HttpHandler httpHandler = new MyHttpHandler();
-//        api.http().registerHttpHandler(httpHandler);
     }
 
     private Component constructLoggerTab(MyTableModel tableModel)
@@ -96,7 +92,7 @@ public class NNN implements BurpExtension {
 
         // new information pane
         this.infoPane.setEditable(false); // Make it read-only
-        this.infoPane.setText("NNN is waiting to start a test\nPlease select a payload type"); // Set initial text to "Hello World"
+        this.infoPane.setText("[i] NNN is ready - Please start a test\n"); // Set initial text to "Hello World"
         JScrollPane infoScrollPane = new JScrollPane(this.infoPane);
 
         // Create a button to clear logged packets
@@ -145,37 +141,7 @@ public class NNN implements BurpExtension {
         table.getColumnModel().getColumn(4).setMaxWidth(90);
         table.getColumnModel().getColumn(5).setMaxWidth(90);
 
-        // Create a custom TableRowSorter
-        TableRowSorter<TableModel> sorter = new TableRowSorter<>(tableModel);
-
-        // Set custom comparators for numeric sorting on the first and last columns
-        sorter.setComparator(0, new Comparator<Object>() {
-            @Override
-            public int compare(Object o1, Object o2) {
-                try {
-                    int num1 = Integer.parseInt(o1.toString());
-                    int num2 = Integer.parseInt(o2.toString());
-                    return Integer.compare(num1, num2);
-                } catch (NumberFormatException e) {
-                    return o1.toString().compareTo(o2.toString());
-                }
-            }
-        });
-
-        sorter.setComparator(tableModel.getColumnCount() - 1, new Comparator<Object>() {
-            @Override
-            public int compare(Object o1, Object o2) {
-                try {
-                    int num1 = Integer.parseInt(o1.toString());
-                    int num2 = Integer.parseInt(o2.toString());
-                    return Integer.compare(num1, num2);
-                } catch (NumberFormatException e) {
-                    return o1.toString().compareTo(o2.toString());
-                }
-            }
-        });
-
-        table.setRowSorter(sorter);
+//        table.setAutoCreateRowSorter(true);
 
         JScrollPane scrollPane = new JScrollPane(table);
 
@@ -186,26 +152,44 @@ public class NNN implements BurpExtension {
 
 
     static void fuzzstringTest(HttpRequestResponse requestResponse, Integer startIndex, Integer endIndex) {
-        api.logging().logToOutput("[i] Selected request:\n" + requestResponse.request().toString() + "\n");
         new Thread(() -> {
             try {
+                infoPane.setText(infoPane.getText() + "[i] Fuzz String Test\n");
                 HttpRequest request2send;
                 HttpRequestResponse response2receive;
                 HttpService httpService = requestResponse.request().httpService();
                 for (Payload payload : payloadsArrayList){
                     if (payload.payloadType == PayloadType.FUZZ_STRING) {
-                        request2send = HttpRequest.httpRequest(httpService, requestResponse.request().toString().substring(0, startIndex) + payload.payloadUrlEncoded + requestResponse.request().toString().substring(endIndex));
-                        api.logging().logToOutput("[i] Modified request:\n" + request2send.toString() + "\n");
+                        request2send = HttpRequest.httpRequest(httpService, requestResponse.request().toString());
                         if (request2send.method().equals("POST")) {
+                            request2send = HttpRequest.httpRequest(httpService, requestResponse.request().toString().substring(0, startIndex) + payload.payload + requestResponse.request().toString().substring(endIndex));
                             response2receive = api.http().sendRequest(request2send.withUpdatedHeader("Content-Length", String.valueOf(request2send.body().length())));
                         } else {
+                            request2send = HttpRequest.httpRequest(httpService, requestResponse.request().toString().substring(0, startIndex) + payload.payloadUrlEncoded + requestResponse.request().toString().substring(endIndex));
                             response2receive = api.http().sendRequest(request2send);
                         }
-                        api.logging().logToOutput("[i] Response:\n" + response2receive.response().toString() + "\n");
+                        if (response2receive.response().statusCode() != 200) {
+                            infoPane.setText(infoPane.getText() + "Status Code: " + response2receive.response().statusCode() + "        Length: " + String.format("%" + 8 + "s", response2receive.response().toString().length()) + "       Payload: " + payload.payload + "\n");
+                        }
+                        for (int i = 0; i < payload.payload.length(); i++) {
+                            char c = payload.payload.charAt(i);
+                            request2send = HttpRequest.httpRequest(httpService, requestResponse.request().toString());
+                            if (request2send.method().equals("POST")) {
+                                request2send = HttpRequest.httpRequest(httpService, requestResponse.request().toString().substring(0, startIndex) + c + requestResponse.request().toString().substring(endIndex));
+                                response2receive = api.http().sendRequest(request2send.withUpdatedHeader("Content-Length", String.valueOf(request2send.body().length())));
+                            } else {
+                                request2send = HttpRequest.httpRequest(httpService, requestResponse.request().toString().substring(0, startIndex) + api.utilities().urlUtils().encode(String.valueOf(c)) + requestResponse.request().toString().substring(endIndex));
+                                response2receive = api.http().sendRequest(request2send);
+                            }
+                            if (response2receive.response().statusCode() != 200) {
+                                infoPane.setText(infoPane.getText() + "Status Code: " + response2receive.response().statusCode() + "        Length: " + String.format("%" + 8 + "s", response2receive.response().toString().length()) + "       Payload: " + c + "\n");
+                            }
+                        }
                     }
                 }
             } catch (Exception e) {
-                api.logging().logToOutput("[!] Request failed");
+                api.logging().logToError("[!] FuzzString module failed");
+                api.logging().logToError(e);
             }
         }).start();
     }
