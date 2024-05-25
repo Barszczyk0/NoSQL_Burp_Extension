@@ -31,12 +31,13 @@ public class MyContextMenuItemsProvider implements ContextMenuItemsProvider
 
             JMenuItem selection_FUZZ_STRING = new JMenuItem("Use payload type: FUZZ_STRING");
             JMenuItem selection_BOOLEAN = new JMenuItem("Use payload type: BOOLEAN");
-            JMenuItem selection_AUTHENTICATION_BYPASS_USERNAME = new JMenuItem("Use payload type: AUTHENTICATION_BYPASS_USERNAME");
-            JMenuItem selection_AUTHENTICATION_BYPASS_PASSWORD = new JMenuItem("Use payload type: AUTHENTICATION_BYPASS_PASSWORD");
+            // JMenuItem selection_AUTHENTICATION_BYPASS_USERNAME = new JMenuItem("Use payload type: AUTHENTICATION_BYPASS_USERNAME");
+            // JMenuItem selection_AUTHENTICATION_BYPASS_PASSWORD = new JMenuItem("Use payload type: AUTHENTICATION_BYPASS_PASSWORD");
             JMenuItem selection_DATA_EXTRACTION = new JMenuItem("Use payload type: DATA_EXTRACTION");
             JMenuItem selection_TIME_BASED = new JMenuItem("Use payload type: TIME_BASED");
             JMenuItem selection_PASSWORD = new JMenuItem("select password field");
             JMenuItem selection_USERNAME = new JMenuItem("select username field");
+            JMenuItem selection_FIELDNAME_EXTRACTION = new JMenuItem("extract field names");
 
             String startIndexSelected = event.messageEditorRequestResponse().isPresent() ?
                     String.valueOf(event.messageEditorRequestResponse().get().selectionOffsets().get().startIndexInclusive()) :
@@ -52,14 +53,18 @@ public class MyContextMenuItemsProvider implements ContextMenuItemsProvider
 
             selection_FUZZ_STRING.addActionListener(l -> NNN.fuzzstringTest(requestResponse, Integer.parseInt(startIndexSelected), Integer.parseInt(endIndexSelected)));
             selection_BOOLEAN.addActionListener(l -> NNN.booleanTest(requestResponse, Integer.parseInt(startIndexSelected), Integer.parseInt(endIndexSelected)));
-            selection_AUTHENTICATION_BYPASS_USERNAME.addActionListener(l -> NNN.authenticationUsernameTest(requestResponse, Integer.parseInt(startIndexSelected), Integer.parseInt(endIndexSelected)));
-            selection_AUTHENTICATION_BYPASS_PASSWORD.addActionListener(l -> NNN.authenticationPasswordTest(requestResponse, Integer.parseInt(startIndexSelected), Integer.parseInt(endIndexSelected)));
+            // selection_AUTHENTICATION_BYPASS_USERNAME.addActionListener(l -> NNN.authenticationUsernameTest(requestResponse, Integer.parseInt(startIndexSelected), Integer.parseInt(endIndexSelected)));
+            // selection_AUTHENTICATION_BYPASS_PASSWORD.addActionListener(l -> NNN.authenticationPasswordTest(requestResponse, Integer.parseInt(startIndexSelected), Integer.parseInt(endIndexSelected)));
             selection_DATA_EXTRACTION.addActionListener(l -> api.logging().logToOutput("Selected text is (from data extraction):\r\n" + startIndexSelected + endIndexSelected));
             selection_TIME_BASED.addActionListener(l -> api.logging().logToOutput("Selected text is (from time based):\r\n" + startIndexSelected + endIndexSelected));
             selection_PASSWORD.addActionListener(l -> {api.logging().logToOutput("Selected password field:\r\n" + startIndexSelected + endIndexSelected);
                 startPasswordIndex = Integer.valueOf(startIndexSelected); endPasswordIndex = Integer.valueOf(endIndexSelected);
                 if (startUsernameIndex != null && endUsernameIndex != null){
                     NNN.authenticationTest(requestResponse, startUsernameIndex, endUsernameIndex, startPasswordIndex, endPasswordIndex);
+                    startUsernameIndex = null;
+                    endUsernameIndex = null;
+                    startPasswordIndex = null;
+                    endPasswordIndex = null;
                 }
             });
 
@@ -67,17 +72,24 @@ public class MyContextMenuItemsProvider implements ContextMenuItemsProvider
                 startUsernameIndex = Integer.valueOf(startIndexSelected); endUsernameIndex = Integer.valueOf(endIndexSelected);
                 if (startPasswordIndex != null && endPasswordIndex != null){
                     NNN.authenticationTest(requestResponse, startUsernameIndex, endUsernameIndex, startPasswordIndex, endPasswordIndex);
+                    startUsernameIndex = null;
+                    endUsernameIndex = null;
+                    startPasswordIndex = null;
+                    endPasswordIndex = null;
                 }
             });
 
+            selection_FIELDNAME_EXTRACTION.addActionListener(l -> NNN.extractFieldNames(requestResponse));
+
             menuItemList.add(selection_FUZZ_STRING);
             menuItemList.add(selection_BOOLEAN);
-            menuItemList.add(selection_AUTHENTICATION_BYPASS_USERNAME);
-            menuItemList.add(selection_AUTHENTICATION_BYPASS_PASSWORD);
+            // menuItemList.add(selection_AUTHENTICATION_BYPASS_USERNAME);
+            // menuItemList.add(selection_AUTHENTICATION_BYPASS_PASSWORD);
             menuItemList.add(selection_DATA_EXTRACTION);
             menuItemList.add(selection_TIME_BASED);
             menuItemList.add(selection_USERNAME);
             menuItemList.add(selection_PASSWORD);
+            menuItemList.add(selection_FIELDNAME_EXTRACTION);
 
             return menuItemList;
         }
