@@ -1,8 +1,12 @@
 import burp.api.montoya.http.handler.HttpResponseReceived;
 
 import javax.swing.table.AbstractTableModel;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
+
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 
 public class MyTableModel extends AbstractTableModel
 {
@@ -22,7 +26,7 @@ public class MyTableModel extends AbstractTableModel
     @Override
     public int getColumnCount()
     {
-        return 6;
+        return 7;
     }
 
     @Override
@@ -33,9 +37,10 @@ public class MyTableModel extends AbstractTableModel
             case 0 -> "#";
             case 1 -> "Method";
             case 2 -> "URL";
-            case 3 -> "Body/Parameters";
-            case 4 -> "Status Code";
-            case 5 -> "Length";
+            case 3 -> "Query";
+            case 4 -> "Body";
+            case 5 -> "Status Code";
+            case 6 -> "Length";
             default -> "";
         };
     }
@@ -49,11 +54,10 @@ public class MyTableModel extends AbstractTableModel
             case 0 -> responseReceived.messageId();
             case 1 -> responseReceived.initiatingRequest().method();
             case 2 -> responseReceived.initiatingRequest().url();
-            case 3 -> responseReceived.initiatingRequest().query().length() == 0 ?
-                    responseReceived.initiatingRequest().body().toString() :
-                    responseReceived.initiatingRequest().query();
-            case 4 -> responseReceived.statusCode();
-            case 5 -> responseReceived.toString().length();
+            case 3 -> URLDecoder.decode(responseReceived.initiatingRequest().query(), StandardCharsets.UTF_8);
+            case 4 -> URLDecoder.decode(responseReceived.initiatingRequest().body().toString(), StandardCharsets.UTF_8);
+            case 5 -> responseReceived.statusCode();
+            case 6 -> responseReceived.toString().length();
             default -> "";
         };
     }
