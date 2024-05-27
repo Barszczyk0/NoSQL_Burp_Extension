@@ -89,7 +89,7 @@ public class NNN implements BurpExtension {
 
         // new information pane
         this.infoPane.setEditable(false); // Make it read-only
-        this.infoPane.setText("[i] NNN is ready - Please start a test\n"); // Set initial text to "Hello World"
+        this.infoPane.setText("[i] NNN is ready - Please start a test\n"); // Set initial text
         JScrollPane infoScrollPane = new JScrollPane(this.infoPane);
 
         // Create a button to clear logged packets
@@ -135,8 +135,8 @@ public class NNN implements BurpExtension {
         // Columns sizes
         table.getColumnModel().getColumn(0).setMaxWidth(50);
         table.getColumnModel().getColumn(1).setMaxWidth(90);
-        table.getColumnModel().getColumn(4).setMaxWidth(90);
         table.getColumnModel().getColumn(5).setMaxWidth(90);
+        table.getColumnModel().getColumn(6).setMaxWidth(90);
 
 //        table.setAutoCreateRowSorter(true);
 
@@ -190,7 +190,7 @@ public class NNN implements BurpExtension {
         ArrayList<HttpRequestResponse> outliers = findOutliers(responseList, mean, stdDev);
         // Add to outliers responses with suspicious status codes
         for (HttpRequestResponse resp : responseList) {
-            if (resp.response().statusCode() != 200 && resp.response().statusCode() != 400) {
+            if (resp.response().statusCode()!=200 && resp.response().statusCode()!=400 && resp.response().statusCode()!=404) {
                 outliers.add(resp);
             }
         }
@@ -408,7 +408,6 @@ public class NNN implements BurpExtension {
                 } else {
 
                 }
-
             } catch (Exception e) {
                 api.logging().logToError("[!] Extract Field Names module failed");
                 api.logging().logToError(e);
