@@ -24,20 +24,20 @@ public class MyContextMenuItemsProvider implements ContextMenuItemsProvider
     @Override
     public List<Component> provideMenuItems(ContextMenuEvent event)
     {
-        if (event.isFromTool(ToolType.PROXY, ToolType.REPEATER, ToolType.LOGGER, ToolType.EXTENSIONS))
+        if (event.isFromTool(ToolType.PROXY, ToolType.REPEATER, ToolType.LOGGER, ToolType.EXTENSIONS, ToolType.TARGET))
         {
             List<Component> menuItemList = new ArrayList<>();
             event.messageEditorRequestResponse().get().selectionContext();
 
-            JMenuItem selection_FUZZ_STRING = new JMenuItem("Use payload type: FUZZ_STRING");
-            JMenuItem selection_BOOLEAN = new JMenuItem("Use payload type: BOOLEAN");
-            // JMenuItem selection_AUTHENTICATION_BYPASS_USERNAME = new JMenuItem("Use payload type: AUTHENTICATION_BYPASS_USERNAME");
-            // JMenuItem selection_AUTHENTICATION_BYPASS_PASSWORD = new JMenuItem("Use payload type: AUTHENTICATION_BYPASS_PASSWORD");
-            JMenuItem selection_DATA_EXTRACTION = new JMenuItem("Use payload type: DATA_EXTRACTION");
-            JMenuItem selection_TIME_BASED = new JMenuItem("Use payload type: TIME_BASED");
-            JMenuItem selection_PASSWORD = new JMenuItem("select password field");
-            JMenuItem selection_USERNAME = new JMenuItem("select username field");
-            JMenuItem selection_FIELDNAME_EXTRACTION = new JMenuItem("extract field names");
+            JMenuItem selection_FUZZ_STRING = new JMenuItem("Perform test: FUZZ_STRING");
+            JMenuItem selection_BOOLEAN = new JMenuItem("Perform test: BOOLEAN");
+            JMenuItem selection_AUTHENTICATION_BYPASS_USERNAME = new JMenuItem("Perform test: AUTHENTICATION_BYPASS_USERNAME");
+            JMenuItem selection_AUTHENTICATION_BYPASS_PASSWORD = new JMenuItem("Perform test: AUTHENTICATION_BYPASS_PASSWORD");
+            JMenuItem selection_FIELDNAME_EXTRACTION = new JMenuItem("Perform extraction of field names");
+//            JMenuItem selection_TIME_BASED = new JMenuItem("Perform test: TIME_BASED");
+            JMenuItem selection_PASSWORD = new JMenuItem("[AUTHENTICATION TEST] Select password field");
+            JMenuItem selection_USERNAME = new JMenuItem("[AUTHENTICATION TEST] Select username field");
+
 
             String startIndexSelected = event.messageEditorRequestResponse().isPresent() ?
                     String.valueOf(event.messageEditorRequestResponse().get().selectionOffsets().get().startIndexInclusive()) :
@@ -51,12 +51,14 @@ public class MyContextMenuItemsProvider implements ContextMenuItemsProvider
             String selectedText = requestResponse.request().toString().substring(Integer.parseInt(startIndexSelected), Integer.parseInt(endIndexSelected));
 
 
+
             selection_FUZZ_STRING.addActionListener(l -> NNN.fuzzstringTest(requestResponse, Integer.parseInt(startIndexSelected), Integer.parseInt(endIndexSelected)));
             selection_BOOLEAN.addActionListener(l -> NNN.booleanTest(requestResponse, Integer.parseInt(startIndexSelected), Integer.parseInt(endIndexSelected)));
-            // selection_AUTHENTICATION_BYPASS_USERNAME.addActionListener(l -> NNN.authenticationUsernameTest(requestResponse, Integer.parseInt(startIndexSelected), Integer.parseInt(endIndexSelected)));
-            // selection_AUTHENTICATION_BYPASS_PASSWORD.addActionListener(l -> NNN.authenticationPasswordTest(requestResponse, Integer.parseInt(startIndexSelected), Integer.parseInt(endIndexSelected)));
-            selection_DATA_EXTRACTION.addActionListener(l -> api.logging().logToOutput("Selected text is (from data extraction):\r\n" + startIndexSelected + endIndexSelected));
-            selection_TIME_BASED.addActionListener(l -> api.logging().logToOutput("Selected text is (from time based):\r\n" + startIndexSelected + endIndexSelected));
+            selection_AUTHENTICATION_BYPASS_USERNAME.addActionListener(l -> NNN.authenticationUsernameTest(requestResponse, Integer.parseInt(startIndexSelected), Integer.parseInt(endIndexSelected)));
+            selection_AUTHENTICATION_BYPASS_PASSWORD.addActionListener(l -> NNN.authenticationPasswordTest(requestResponse, Integer.parseInt(startIndexSelected), Integer.parseInt(endIndexSelected)));
+//            selection_TIME_BASED.addActionListener(l -> api.logging().logToOutput("Selected text is (from time based):\r\n" + startIndexSelected + endIndexSelected));
+
+            // AUTHENTICATION TEST - Password Selection
             selection_PASSWORD.addActionListener(l -> {api.logging().logToOutput("Selected password field:\r\n" + startIndexSelected + endIndexSelected);
                 startPasswordIndex = Integer.valueOf(startIndexSelected); endPasswordIndex = Integer.valueOf(endIndexSelected);
                 if (startUsernameIndex != null && endUsernameIndex != null){
@@ -68,6 +70,7 @@ public class MyContextMenuItemsProvider implements ContextMenuItemsProvider
                 }
             });
 
+            // AUTHENTICATION TEST - Username Selection
             selection_USERNAME.addActionListener(l -> {api.logging().logToOutput("Selected username field:\r\n" + startIndexSelected + endIndexSelected);
                 startUsernameIndex = Integer.valueOf(startIndexSelected); endUsernameIndex = Integer.valueOf(endIndexSelected);
                 if (startPasswordIndex != null && endPasswordIndex != null){
@@ -83,13 +86,13 @@ public class MyContextMenuItemsProvider implements ContextMenuItemsProvider
 
             menuItemList.add(selection_FUZZ_STRING);
             menuItemList.add(selection_BOOLEAN);
-            // menuItemList.add(selection_AUTHENTICATION_BYPASS_USERNAME);
-            // menuItemList.add(selection_AUTHENTICATION_BYPASS_PASSWORD);
-            menuItemList.add(selection_DATA_EXTRACTION);
-            menuItemList.add(selection_TIME_BASED);
+            menuItemList.add(selection_AUTHENTICATION_BYPASS_USERNAME);
+            menuItemList.add(selection_AUTHENTICATION_BYPASS_PASSWORD);
+            menuItemList.add(selection_FIELDNAME_EXTRACTION);
+//            menuItemList.add(selection_TIME_BASED);
             menuItemList.add(selection_USERNAME);
             menuItemList.add(selection_PASSWORD);
-            menuItemList.add(selection_FIELDNAME_EXTRACTION);
+
 
             return menuItemList;
         }
