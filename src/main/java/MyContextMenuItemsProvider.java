@@ -34,6 +34,7 @@ public class MyContextMenuItemsProvider implements ContextMenuItemsProvider
             JMenuItem selection_AUTHENTICATION_BYPASS_USERNAME = new JMenuItem("Perform test: AUTHENTICATION_BYPASS_USERNAME");
             JMenuItem selection_AUTHENTICATION_BYPASS_PASSWORD = new JMenuItem("Perform test: AUTHENTICATION_BYPASS_PASSWORD");
             JMenuItem selection_FIELDNAME_EXTRACTION = new JMenuItem("Perform extraction of field names");
+            JMenuItem selection_EXTRACT_DATA = new JMenuItem("Perform data extraction");
 //            JMenuItem selection_TIME_BASED = new JMenuItem("Perform test: TIME_BASED");
             JMenuItem selection_PASSWORD = new JMenuItem("[AUTHENTICATION TEST] Select password field");
             JMenuItem selection_USERNAME = new JMenuItem("[AUTHENTICATION TEST] Select username field");
@@ -57,6 +58,7 @@ public class MyContextMenuItemsProvider implements ContextMenuItemsProvider
             selection_AUTHENTICATION_BYPASS_USERNAME.addActionListener(l -> NNN.authenticationUsernameTest(requestResponse, Integer.parseInt(startIndexSelected), Integer.parseInt(endIndexSelected)));
             selection_AUTHENTICATION_BYPASS_PASSWORD.addActionListener(l -> NNN.authenticationPasswordTest(requestResponse, Integer.parseInt(startIndexSelected), Integer.parseInt(endIndexSelected)));
 //            selection_TIME_BASED.addActionListener(l -> api.logging().logToOutput("Selected text is (from time based):\r\n" + startIndexSelected + endIndexSelected));
+            selection_EXTRACT_DATA.addActionListener(l -> NNN.dataExtractionTest(requestResponse, Integer.parseInt(startIndexSelected), Integer.parseInt(endIndexSelected)));
 
             // AUTHENTICATION TEST - Password Selection
             selection_PASSWORD.addActionListener(l -> {api.logging().logToOutput("Selected password field:\r\n" + startIndexSelected + endIndexSelected);
@@ -89,6 +91,7 @@ public class MyContextMenuItemsProvider implements ContextMenuItemsProvider
             menuItemList.add(selection_AUTHENTICATION_BYPASS_USERNAME);
             menuItemList.add(selection_AUTHENTICATION_BYPASS_PASSWORD);
             menuItemList.add(selection_FIELDNAME_EXTRACTION);
+            menuItemList.add(selection_EXTRACT_DATA);
 //            menuItemList.add(selection_TIME_BASED);
             menuItemList.add(selection_USERNAME);
             menuItemList.add(selection_PASSWORD);
