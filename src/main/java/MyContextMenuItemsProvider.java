@@ -56,7 +56,7 @@ public class MyContextMenuItemsProvider implements ContextMenuItemsProvider
             selection_BOOLEAN.addActionListener(l -> NNN.booleanTest(requestResponse, Integer.parseInt(startIndexSelected), Integer.parseInt(endIndexSelected)));
             selection_AUTHENTICATION_BYPASS_USERNAME.addActionListener(l -> NNN.authenticationUsernameTest(requestResponse, Integer.parseInt(startIndexSelected), Integer.parseInt(endIndexSelected)));
             selection_AUTHENTICATION_BYPASS_PASSWORD.addActionListener(l -> NNN.authenticationPasswordTest(requestResponse, Integer.parseInt(startIndexSelected), Integer.parseInt(endIndexSelected)));
-            selection_FIELDNAME_EXTRACTION.addActionListener(l -> NNN.extractFieldNames(requestResponse));
+            selection_FIELDNAME_EXTRACTION.addActionListener(l -> NNN.extractFieldNames(requestResponse, Integer.parseInt(endIndexSelected)));
             selection_DATA_EXTRACTION.addActionListener(l -> NNN.dataExtraction(requestResponse, Integer.parseInt(startIndexSelected), Integer.parseInt(endIndexSelected)));
 
             // AUTHENTICATION TEST - Password Selection

