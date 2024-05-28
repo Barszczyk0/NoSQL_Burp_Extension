@@ -353,7 +353,6 @@ public class NNN implements BurpExtension {
                                         request2send = HttpRequest.httpRequest(httpService, requestResponse.request().toString().substring(0, startPasswordIndex) + payload2.payload + requestResponse.request().toString().substring(endPasswordIndex));
                                         request2send = HttpRequest.httpRequest(httpService, request2send.toString().substring(0, startUsernameIndex) + payload1.payload + request2send.toString().substring(endUsernameIndex));
                                     }
-//                                    api.logging().logToOutput("[i] Modified request:\n" + request2send.toString() + "\n");
                                     response2receive = api.http().sendRequest(request2send.withUpdatedHeader("Content-Length", String.valueOf(request2send.body().length())));
                                     responseList.add(response2receive);
                                 } else {
@@ -364,11 +363,9 @@ public class NNN implements BurpExtension {
                                         request2send = HttpRequest.httpRequest(httpService, requestResponse.request().toString().substring(0, startPasswordIndex) + payload2.payloadUrlEncoded + requestResponse.request().toString().substring(endPasswordIndex));
                                         request2send = HttpRequest.httpRequest(httpService, request2send.toString().substring(0, startUsernameIndex) + payload1.payloadUrlEncoded + request2send.toString().substring(endUsernameIndex));
                                     }
-//                                    api.logging().logToOutput("[i] Modified request:\n" + request2send.toString() + "\n");
                                     response2receive = api.http().sendRequest(request2send);
                                     responseList.add(response2receive);
                                 }
-//                                api.logging().logToOutput("[i] Response:\n" + response2receive.response().toString() + "\n");
                             }
                         }
                     }
