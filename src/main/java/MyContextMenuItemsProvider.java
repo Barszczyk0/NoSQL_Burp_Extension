@@ -11,7 +11,6 @@ import java.util.List;
 
 public class MyContextMenuItemsProvider implements ContextMenuItemsProvider
 {
-
     private final MontoyaApi api;
     private MyHttpHandler myHttpHandler;
     private Integer startUsernameIndex, endUsernameIndex, startPasswordIndex, endPasswordIndex;
@@ -38,7 +37,6 @@ public class MyContextMenuItemsProvider implements ContextMenuItemsProvider
             JMenuItem selection_PASSWORD = new JMenuItem("[AUTHENTICATION TEST] Select password field");
             JMenuItem selection_USERNAME = new JMenuItem("[AUTHENTICATION TEST] Select username field");
 
-
             String startIndexSelected = event.messageEditorRequestResponse().isPresent() ?
                     String.valueOf(event.messageEditorRequestResponse().get().selectionOffsets().get().startIndexInclusive()) :
                     "";
@@ -49,8 +47,6 @@ public class MyContextMenuItemsProvider implements ContextMenuItemsProvider
 
             HttpRequestResponse requestResponse = event.messageEditorRequestResponse().isPresent() ? event.messageEditorRequestResponse().get().requestResponse() : event.selectedRequestResponses().get(0);
             String selectedText = requestResponse.request().toString().substring(Integer.parseInt(startIndexSelected), Integer.parseInt(endIndexSelected));
-
-
 
             selection_FUZZ_STRING.addActionListener(l -> NNN.fuzzstringTest(requestResponse, Integer.parseInt(startIndexSelected), Integer.parseInt(endIndexSelected)));
             selection_BOOLEAN.addActionListener(l -> NNN.booleanTest(requestResponse, Integer.parseInt(startIndexSelected), Integer.parseInt(endIndexSelected)));
@@ -87,10 +83,10 @@ public class MyContextMenuItemsProvider implements ContextMenuItemsProvider
             menuItemList.add(selection_BOOLEAN);
             menuItemList.add(selection_AUTHENTICATION_BYPASS_USERNAME);
             menuItemList.add(selection_AUTHENTICATION_BYPASS_PASSWORD);
-            menuItemList.add(selection_FIELDNAME_EXTRACTION);
-            menuItemList.add(selection_DATA_EXTRACTION);
             menuItemList.add(selection_USERNAME);
             menuItemList.add(selection_PASSWORD);
+            menuItemList.add(selection_FIELDNAME_EXTRACTION);
+            menuItemList.add(selection_DATA_EXTRACTION);
 
             return menuItemList;
         }
