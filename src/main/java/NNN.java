@@ -131,19 +131,14 @@ public class NNN implements BurpExtension {
                 super.changeSelection(rowIndex, columnIndex, toggle, extend);
             }
         };
-
         // Columns sizes
         table.getColumnModel().getColumn(0).setMaxWidth(50);
         table.getColumnModel().getColumn(1).setMaxWidth(90);
         table.getColumnModel().getColumn(5).setMaxWidth(90);
         table.getColumnModel().getColumn(6).setMaxWidth(90);
 
-//        table.setAutoCreateRowSorter(true);
-
         JScrollPane scrollPane = new JScrollPane(table);
-
         splitPane.setLeftComponent(scrollPane);
-
         return splitPane;
     }
 
@@ -265,13 +260,11 @@ public class NNN implements BurpExtension {
                 for (Payload payload : payloadsArrayList){
                     if (payload.payloadType == PayloadType.BOOLEAN) {
                         request2send = HttpRequest.httpRequest(httpService, requestResponse.request().toString().substring(0, startIndex) + payload.payloadUrlEncoded + requestResponse.request().toString().substring(endIndex));
-                        api.logging().logToOutput("[i] Modified request:\n" + request2send.toString() + "\n");
                         if (request2send.method().equals("POST")) {
                             response2receive = api.http().sendRequest(request2send.withUpdatedHeader("Content-Length", String.valueOf(request2send.body().length())));
                         } else {
                             response2receive = api.http().sendRequest(request2send);
                         }
-                        api.logging().logToOutput("[i] Response:\n" + response2receive.response().toString() + "\n");
                         responseList.add(response2receive);
                     }
                 }
@@ -537,8 +530,6 @@ public class NNN implements BurpExtension {
                     responseList.add(response2receive);
                 }
                 length = printSuspiciousResponses(responseList).size() + 1;
-            } else {
-
             }
         } catch (Exception e) {
             api.logging().logToError("[!] Error identifying password length");
@@ -570,8 +561,6 @@ public class NNN implements BurpExtension {
                         api.logging().logToError(e);
                     }
                 }
-            } else {
-
             }
         } catch (Exception e) {
             api.logging().logToError("[!] Error enumerating password");
