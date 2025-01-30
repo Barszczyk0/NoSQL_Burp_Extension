@@ -1,4 +1,4 @@
-## NoSQL NeedleN inja
+## NoSQL Needle Ninja
 
 Burp Suite extension for detection and exploitation of variants of the NoSQL Injection vulnerability. Made for the free version of Burp Suite. Uses Montoya API. 
 
